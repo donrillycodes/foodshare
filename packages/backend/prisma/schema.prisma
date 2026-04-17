@@ -4,12 +4,622 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+
+//Performance Indexes
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  DONOR
+  NGO
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum NGOStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+  RESUBMITTED
+}
+
+enum NGOCategory {
+  FOOD_BANK
+  HEALTHCARE
+  EDUCATION
+  SHELTER
+  COMMUNITY
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+enum DonationType {
+  ONE_TIME
+  RECURRING
+}
+
+enum PaymentProvider {
+  STRIPE
+  FLUTTERWAVE
+}
+
+enum FoodItemCategory {
+  CANNED_GOODS
+  GRAINS
+  PASTA
+  CONDIMENTS
+  BEVERAGES
+  OTHER
+}
+
+enum FoodNeedStatus {
+  OPEN
+  FULFILLED
+  CLOSED
+  EXPIRED
+}
+
+enum FoodPledgeStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+  EXPIRED
+}
+
+enum UpdateType {
+  IMPACT_STORY
+  CAMPAIGN_UPDATE
+  ANNOUNCEMENT
+  THANK_YOU
+}
+
+enum UpdateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum NotificationType {
+  DONATION_CONFIRMED
+  DONATION_FAILED
+  DONATION_REFUNDED
+  PLEDGE_RECEIVED
+  PLEDGE_CONFIRMED
+  PLEDGE_FULFILLED
+  PLEDGE_CANCELLED
+  PLEDGE_EXPIRING_SOON
+  NGO_APPROVED
+  REJECTED
+  NGO_SUSPENDED
+  UPDATE_PUBLISHED
+  NEW_FOOD_NEED
+  ADMIN_ALERT
+}
+
+enum NotificationReferenceType {
+  DONATION
+  FOOD_PLEDGE
+  FOOD_NEED
+  NGO
+  UPDATE
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  REMOVED
+}
+
+enum NGOMemberRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum AdminDepartment {
+  OPERATIONS
+  VERIFICATION
+  CONTENT
+  FINANCE
+  SUPPORT
+}
+
+enum AuditAction {
+  USER_CREATED
+  USER_SUSPENDED
+  USER_REACTIVATED
+  USER_DELETED
+  USER_ROLE_CHANGED
+  ADMIN_PERMISSION_CHANGED
+  NGO_SUBMITTED
+  NGO_APPROVED
+  NGO_REJECTED
+  NGO_SUSPENDED
+  NGO_RESUBMITTED
+  DONATION_COMPLETED
+  DONATION_REFUNDED
+  DONATION_DISPUTED
+  PLEDGE_CREATED
+  PLEDGE_FULFILLED
+  PLEDGE_CANCELLED
+  UPDATE_PUBLISHED
+  UPDATE_FLAGGED
+  UPDATE_ARCHIVED
+  FOOD_NEED_POSTED
+  FOOD_NEED_CLOSED
+  ADMIN_LOGIN
+}
+
+enum AuditEntityType {
+  USER
+  NGO
+  NGO_MEMBER
+  ADMIN_MEMBER
+  DONATION
+  FOOD_NEED
+  FOOD_PLEDGE
+  UPDATE
+  NOTIFICATION
+}
+
+enum ActorRole {
+  DONOR
+  NGO
+  ADMIN
+  SUPER_ADMIN
+  SYSTEM
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  firstName   String
+  lastName    String
+  role        Role     @default(DONOR)
+  avatarUrl   String?
+  firebaseUid String   @unique
+  isActive    Boolean  @default(true)
+
+  // Admin permission flags
+  canApproveNgos     Boolean @default(false)
+  canManageUsers     Boolean @default(false)
+  canManageContent   Boolean @default(false)
+  canViewAnalytics   Boolean @default(false)
+  canManageAdmins    Boolean @default(false)
+
+  // Relations
+  donations        Donation[]
+  foodPledges      FoodPledge[]
+  notifications    Notification[]
+  ngoMemberships   NGOMember[]
+  adminMembership  AdminMember?
+  managedNgo       NGO?          @relation("NGOManager")
+  verifiedNgos     NGO[]         @relation("NGOVerifier")
+  postedNeeds      FoodNeed[]
+  postedUpdates    Update[]
+  fulfilledPledges FoodPledge[]  @relation("PledgeFulfiller")
+  cancelledPledges FoodPledge[]  @relation("PledgeCanceller")
+  flaggedUpdates   Update[]      @relation("UpdateFlagger")
+  auditLogs        AuditLog[]
+  sentInvitesNgo   NGOMember[]   @relation("NGOMemberInviter")
+  sentInvitesAdmin AdminMember[] @relation("AdminMemberInviter")
+  donorPreference DonorPreference?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([firebaseUid])
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model NGO {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  email       String      @unique
+  phone       String?
+  description String
+  mission     String?
+  category    NGOCategory
+  logoUrl     String?
+  coverUrl    String?
+  website     String?
+
+  // Location
+  address    String
+  city       String      @default("Winnipeg")
+  province   String      @default("Manitoba")
+  country    String      @default("Canada")
+  postalCode String
+
+  // Verification
+  status            NGOStatus @default(PENDING)
+  rejectionReason   String?
+  resubmissionCount Int       @default(0)
+  lastSubmittedAt   DateTime?
+  verifiedAt        DateTime?
+  suspendedAt       DateTime?
+
+  // Payment
+  stripeAccountId String?
+
+  // Relations
+  managerId  String @unique
+  manager    User   @relation("NGOManager", fields: [managerId], references: [id])
+
+  verifiedById String?
+  verifiedBy   User?   @relation("NGOVerifier", fields: [verifiedById], references: [id])
+
+  members   NGOMember[]
+  donations Donation[]
+  foodNeeds FoodNeed[]
+  updates   Update[]
+  pledges   FoodPledge[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([city])
+  @@index([managerId])
+  @@map("ngos")
+}
+
+model NGOMember {
+  id     String        @id @default(uuid())
+  role   NGOMemberRole @default(STAFF)
+  status MemberStatus  @default(PENDING)
+
+  // Permissions
+  canPostNeeds      Boolean @default(false)
+  canPostUpdates    Boolean @default(false)
+  canManagePledges  Boolean @default(false)
+  canViewDonations  Boolean @default(false)
+  canManageMembers  Boolean @default(false)
+
+  // Relations
+  ngoId  String
+  ngo    NGO    @relation(fields: [ngoId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  invitedById String
+  invitedBy   User   @relation("NGOMemberInviter", fields: [invitedById], references: [id])
+
+  // Timestamps
+  invitedAt DateTime  @default(now())
+  joinedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([ngoId, userId])
+  @@map("ngo_members")
+}
+
+model AdminMember {
+  id         String          @id @default(uuid())
+  department AdminDepartment
+  status     MemberStatus    @default(PENDING)
+
+  // Permissions
+  canApproveNgos     Boolean @default(false)
+  canManageUsers     Boolean @default(false)
+  canManageContent   Boolean @default(false)
+  canViewAnalytics   Boolean @default(false)
+  canManageAdmins    Boolean @default(false)
+  canManageDonations Boolean @default(false)
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  invitedById String
+  invitedBy   User   @relation("AdminMemberInviter", fields: [invitedById], references: [id])
+
+  // Timestamps
+  invitedAt    DateTime  @default(now())
+  joinedAt     DateTime?
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("admin_members")
+}
+
+model Donation {
+  id       String          @id @default(uuid())
+  amount   Decimal         @db.Decimal(10, 2)
+  currency String          @default("CAD")
+  status   DonationStatus  @default(PENDING)
+  type     DonationType    @default(ONE_TIME)
+
+  // Payment provider
+  paymentProvider   PaymentProvider
+  providerPaymentId String
+  providerTransferId String?
+
+  // Optional donor message
+  message     String?
+  isAnonymous Boolean @default(false)
+
+  // Refund tracking
+  refundedAt    DateTime?
+  refundReason  String?
+
+  // Relations
+  donorId String
+  donor   User   @relation(fields: [donorId], references: [id])
+
+  ngoId String
+  ngo   NGO    @relation(fields: [ngoId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([donorId])
+  @@index([ngoId])
+  @@index([status])
+  @@index([paymentProvider])
+  @@map("donations")
+}
+
+model FoodNeed {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  itemName    String
+  itemCategory FoodItemCategory
+  unit        String
+
+  // Quantity tracking
+  quantityRequired  Int
+  quantityFulfilled Int @default(0)
+
+  // Status and urgency
+  status   FoodNeedStatus @default(OPEN)
+  isUrgent Boolean        @default(false)
+
+  // Drop off details
+  dropOffAddress      String?
+  dropOffInstructions String?
+
+  // Media
+  imageUrl String?
+
+  // Deadline
+  deadline DateTime?
+
+  // Relations
+  ngoId  String
+  ngo    NGO    @relation(fields: [ngoId], references: [id])
+
+  postedById String
+  postedBy   User   @relation(fields: [postedById], references: [id])
+
+  pledges FoodPledge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([isUrgent])
+  @@index([itemCategory])
+  @@map("food_needs")
+}
+
+model FoodPledge {
+  id              String           @id @default(uuid())
+  quantityPledged Int
+  status          FoodPledgeStatus @default(PENDING)
+
+  // Drop off tracking
+  dropOffDate   DateTime?
+  droppedOffAt  DateTime?
+  fulfilledAt   DateTime?
+
+  // Cancellation tracking
+  cancellationReason String?
+  cancelledAt        DateTime?
+
+  // Optional donor note
+  notes String?
+
+  // Relations
+  donorId String
+  donor   User   @relation(fields: [donorId], references: [id])
+
+  foodNeedId String
+  foodNeed   FoodNeed @relation(fields: [foodNeedId], references: [id])
+
+  ngoId String
+  ngo   NGO    @relation(fields: [ngoId], references: [id])
+
+  fulfilledById String?
+  fulfilledBy   User?   @relation("PledgeFulfiller", fields: [fulfilledById], references: [id])
+
+  cancelledById String?
+  cancelledBy   User?   @relation("PledgeCanceller", fields: [cancelledById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([donorId])
+  @@index([ngoId])
+  @@index([foodNeedId])
+  @@index([status])
+  @@map("food_pledges")
+}
+
+model Update {
+  id          String       @id @default(uuid())
+  title       String
+  body        String
+  summary     String?
+  coverImageUrl String?
+  type        UpdateType
+  status      UpdateStatus @default(DRAFT)
+
+  // Engagement
+  viewsCount Int     @default(0)
+  isPinned   Boolean @default(false)
+
+  // Moderation
+  isFlagged     Boolean @default(false)
+  flaggedReason String?
+  flaggedAt     DateTime?
+
+  // Relations
+  ngoId String
+  ngo   NGO    @relation(fields: [ngoId], references: [id])
+
+  postedById String
+  postedBy   User   @relation(fields: [postedById], references: [id])
+
+  flaggedById String?
+  flaggedBy   User?   @relation("UpdateFlagger", fields: [flaggedById], references: [id])
+
+  // Timestamps
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("updates")
+}
+
+model Notification {
+  id     String             @id @default(uuid())
+  title  String
+  body   String
+  type   NotificationType
+  status NotificationStatus @default(UNREAD)
+
+  // Deep linking
+  referenceId   String?
+  referenceType NotificationReferenceType?
+
+  // Delivery tracking
+  isSent  Boolean   @default(false)
+  sentAt  DateTime?
+  readAt  DateTime?
+
+  // Expiry
+  expiresAt DateTime?
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String          @id @default(uuid())
+  action    AuditAction
+  actorRole ActorRole
+
+  // What was affected
+  entityType AuditEntityType
+  entityId   String
+
+  // State snapshots
+  previousState Json?
+  newState      Json?
+
+  // Security context
+  ipAddress String?
+  userAgent String?
+
+  // Optional notes
+  notes String?
+
+  // Relations
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model DonorPreference {
+  id String @id @default(uuid())
+
+  // Cause preferences
+  categories NGOCategory[]
+
+  // Giving preferences
+  maxDonationAmount Decimal? @db.Decimal(10, 2)
+  preferAnonymous   Boolean  @default(false)
+  currency          String   @default("CAD")
+
+  // Notification preferences
+  notifyOnNewNeeds    Boolean @default(true)
+  notifyOnImpact      Boolean @default(true)
+  notifyOnCampaigns   Boolean @default(true)
+
+  // AI personalisation
+  aiSuggestionsEnabled Boolean @default(true)
+  lastSuggestedAt      DateTime?
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("donor_preferences")
+}
+
+// Indexes for query performance and security
+// These ensure fast lookups on our most frequently queried fields
+
+// Users - fast lookup by Firebase UID on every authenticated request
+// Users - fast lookup by email on login and invitation checks
+// NGOs - fast status filtering for admin approval queue
+// NGOs - fast category filtering for donor browse screen
+// Donations - fast donor history queries
+// Donations - fast NGO donation dashboard queries
+// FoodNeeds - fast NGO feed queries
+// FoodNeeds - fast open needs queries for donor browse
+// FoodPledges - fast donor pledge history
+// FoodPledges - fast NGO incoming pledge dashboard
+// Notifications - fast unread count and feed queries
+// AuditLog - fast entity history lookups
+// AuditLog - fast actor history for security reviews
