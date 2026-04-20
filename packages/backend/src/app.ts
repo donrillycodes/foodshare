@@ -19,25 +19,25 @@ app.use(helmet());
 // In development we allow the local Next.js dashboard and Expo mobile app
 // In production we restrict to our actual domain
 app.use(
-    cors({
-        origin: (origin, callback) => {
-        const allowedOrigins = [
-            env.clientUrl,
-            'http://localhost:3000', // Next.js dashboard
-            'http://localhost:8081', // Expo mobile app
-        ];
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        env.clientUrl,
+        'http://localhost:3000', // Next.js dashboard
+        'http://localhost:8081', // Expo mobile app
+      ];
 
-        // Allow requests with no origin — mobile apps and Postman
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-    })
+      // Allow requests with no origin — mobile apps and Postman
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
 );
 
 // ── Request parsing middleware ─────────────────────────────────────────────────
@@ -54,13 +54,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Morgan logs every incoming request in development
 // We use a custom format that integrates with our Winston logger
 if (env.isDevelopment) {
-    app.use(
-        morgan('combined', {
-        stream: {
-            write: (message: string) => logger.info(message.trim()),
-        },
-        })
-    );
+  app.use(
+    morgan('combined', {
+      stream: {
+        write: (message: string) => logger.info(message.trim()),
+      },
+    })
+  );
 }
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
@@ -73,20 +73,21 @@ app.use(generalLimiter);
 // Simple endpoint to verify the API is running
 // Used by Railway and BetterStack for uptime monitoring
 app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-        status: 'ok',
-        environment: env.nodeEnv,
-        timestamp: new Date().toISOString(),
-    });
+  res.status(200).json({
+    status: 'ok',
+    environment: env.nodeEnv,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ── API routes ─────────────────────────────────────────────────────────────────
 import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // More routes will be added here as we build them
-// app.use('/api/users', userRoutes);
 // app.use('/api/ngos', ngoRoutes);
 // app.use('/api/donations', donationRoutes);
 
@@ -94,11 +95,11 @@ app.use('/api/auth', authRoutes);
 
 // Catches any request to a route that does not exist
 app.use((req: Request, res: Response) => {
-    res.status(404).json({
-        success: false,
-        message: `Route ${req.method} ${req.path} not found`,
-        timestamp: new Date().toISOString(),
-    });
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.method} ${req.path} not found`,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ── Global error handler ───────────────────────────────────────────────────────
@@ -106,7 +107,7 @@ app.use((req: Request, res: Response) => {
 // Must be last — catches all errors thrown anywhere in the application
 // The four parameters are required for Express to recognise this as an error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    errorHandler(err, req, res, next);
+  errorHandler(err, req, res, next);
 });
 
 export default app;
