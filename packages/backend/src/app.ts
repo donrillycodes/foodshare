@@ -93,6 +93,7 @@ import foodNeedRoutes from './routes/foodNeed.routes';
 import foodPledgeRoutes from './routes/foodPledge.routes';
 import updateRoutes from './routes/update.routes';
 import notificationRoutes from './routes/notification.routes';
+import adminRoutes from './routes/admin.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -102,9 +103,7 @@ app.use('/api/food-needs', foodNeedRoutes);
 app.use('/api/food-pledges', foodPledgeRoutes);
 app.use('/api/updates', updateRoutes);
 app.use('/api/notifications', notificationRoutes);
-
-// More routes will be added here as we build them
-// app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminRoutes);
 
 // More routes will be added here as we build them
 // app.use('/api/notifications', notificationRoutes);
