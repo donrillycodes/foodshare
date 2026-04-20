@@ -89,14 +89,15 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import ngoRoutes from './routes/ngo.routes';
 import donationRoutes from './routes/donation.routes';
+import foodNeedRoutes from './routes/foodNeed.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ngos', ngoRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/food-needs', foodNeedRoutes);
 
 // More routes will be added here as we build them
-// app.use('/api/food-needs', foodNeedRoutes);
 // app.use('/api/food-pledges', foodPledgeRoutes);
 
 // ── 404 handler ────────────────────────────────────────────────────────────────
