@@ -90,16 +90,17 @@ import userRoutes from './routes/user.routes';
 import ngoRoutes from './routes/ngo.routes';
 import donationRoutes from './routes/donation.routes';
 import foodNeedRoutes from './routes/foodNeed.routes';
+import foodPledgeRoutes from './routes/foodPledge.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ngos', ngoRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/food-needs', foodNeedRoutes);
+app.use('/api/food-pledges', foodPledgeRoutes);
 
 // More routes will be added here as we build them
-// app.use('/api/food-pledges', foodPledgeRoutes);
-
+// app.use('/api/updates', updateRoutes);
 // ── 404 handler ────────────────────────────────────────────────────────────────
 
 // Catches any request to a route that does not exist
