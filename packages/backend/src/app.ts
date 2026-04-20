@@ -83,13 +83,15 @@ app.get('/health', (req: Request, res: Response) => {
 // ── API routes ─────────────────────────────────────────────────────────────────
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import ngoRoutes from './routes/ngo.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ngos', ngoRoutes);
 
 // More routes will be added here as we build them
-// app.use('/api/ngos', ngoRoutes);
 // app.use('/api/donations', donationRoutes);
+// app.use('/api/food-needs', foodNeedRoutes);
 
 // ── 404 handler ────────────────────────────────────────────────────────────────
 
