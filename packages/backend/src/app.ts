@@ -81,12 +81,14 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // ── API routes ─────────────────────────────────────────────────────────────────
+import authRoutes from './routes/auth.routes';
 
-// Routes will be added here as we build them
-// Example: app.use('/api/auth', authRoutes);
-// Example: app.use('/api/users', userRoutes);
-// Example: app.use('/api/ngos', ngoRoutes);
-// Example: app.use('/api/donations', donationRoutes);
+app.use('/api/auth', authRoutes);
+
+// More routes will be added here as we build them
+// app.use('/api/users', userRoutes);
+// app.use('/api/ngos', ngoRoutes);
+// app.use('/api/donations', donationRoutes);
 
 // ── 404 handler ────────────────────────────────────────────────────────────────
 
