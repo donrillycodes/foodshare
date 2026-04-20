@@ -207,6 +207,7 @@ model User {
   canManageContent   Boolean @default(false)
   canViewAnalytics   Boolean @default(false)
   canManageAdmins    Boolean @default(false)
+  canManageDonations Boolean @default(false)
 
   // Relations
   donations        Donation[]
