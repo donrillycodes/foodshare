@@ -42,8 +42,12 @@ app.use(
 
 // ── Request parsing middleware ─────────────────────────────────────────────────
 
-// Parse incoming JSON request bodies
-// limit prevents large payload attacks where someone sends a huge JSON body
+// Special raw body parser for Stripe webhooks
+// Must be registered BEFORE the global JSON parser
+// Stripe signature verification requires the raw unparsed body
+app.use('/api/donations/webhook', express.raw({ type: 'application/json' }));
+
+// Parse incoming JSON request bodies for all other routes
 app.use(express.json({ limit: '10mb' }));
 
 // Parse URL-encoded form data
@@ -84,14 +88,16 @@ app.get('/health', (req: Request, res: Response) => {
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import ngoRoutes from './routes/ngo.routes';
+import donationRoutes from './routes/donation.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ngos', ngoRoutes);
+app.use('/api/donations', donationRoutes);
 
 // More routes will be added here as we build them
-// app.use('/api/donations', donationRoutes);
 // app.use('/api/food-needs', foodNeedRoutes);
+// app.use('/api/food-pledges', foodPledgeRoutes);
 
 // ── 404 handler ────────────────────────────────────────────────────────────────
 
