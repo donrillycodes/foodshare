@@ -105,9 +105,6 @@ app.use('/api/updates', updateRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// More routes will be added here as we build them
-// app.use('/api/notifications', notificationRoutes);
-
 // ── 404 handler ────────────────────────────────────────────────────────────────
 
 // Catches any request to a route that does not exist
