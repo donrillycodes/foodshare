@@ -42,7 +42,7 @@ export default function AdminDashboard() {
         subtitle="Here is what is happening on FoodShare today"
       />
 
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-8 overflow-y-auto">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (

@@ -108,7 +108,9 @@ export function Sidebar() {
   // Filter admin nav by permissions
   const visibleItems = isNGO
     ? navItems
-    : navItems.filter((item) => item.permission !== false);
+    : navItems.filter(
+        (item) => item.permission === undefined || item.permission === true,
+      );
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-gray-100 flex flex-col">
