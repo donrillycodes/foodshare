@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-:root {
-  --color-green: #1a7a4a;
-  --color-green-dk: #145e38;
-  --color-green-lt: #e8f5ee;
-  --color-green-mid: #2d9e64;
+@theme {
+  --color-brand-green: #1a7a4a;
+  --color-brand-green-dk: #145e38;
+  --color-brand-green-lt: #e8f5ee;
+  --color-brand-green-mid: #2d9e64;
 }
 
 * {
