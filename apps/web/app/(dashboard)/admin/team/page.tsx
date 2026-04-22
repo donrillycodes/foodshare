@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/shared/Header";
 import { adminApi } from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ const PERMISSIONS = [
 
 export default function AdminTeamPage() {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteDepartment, setInviteDepartment] = useState("OPERATIONS");
@@ -264,33 +266,34 @@ export default function AdminTeamPage() {
                   </div>
 
                   {/* Remove button */}
-                  {removingId === member.user.id ? (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-600">
-                        Remove this admin?
-                      </p>
+                  {member.user.id !== currentUser?.id &&
+                    (removingId === member.user.id ? (
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-600">
+                          Remove this admin?
+                        </p>
+                        <button
+                          onClick={() => removeMutation.mutate(member.user.id)}
+                          disabled={removeMutation.isPending}
+                          className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setRemovingId(null)}
+                          className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => removeMutation.mutate(member.user.id)}
-                        disabled={removeMutation.isPending}
-                        className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                        onClick={() => setRemovingId(member.user.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
                       >
-                        Confirm
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setRemovingId(null)}
-                        className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setRemovingId(member.user.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                    ))}
                 </div>
 
                 {/* Permissions */}

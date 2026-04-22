@@ -15,6 +15,7 @@ import {
   Shield,
   LogOut,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 
 interface NavItem {
@@ -39,6 +40,11 @@ export function Sidebar() {
       label: "Food Needs",
       href: "/ngo/food-needs",
       icon: Package,
+    },
+    {
+      label: "Profile",
+      href: "/ngo/profile",
+      icon: Building2,
     },
     {
       label: "Pledges",

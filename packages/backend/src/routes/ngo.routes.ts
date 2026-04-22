@@ -12,19 +12,7 @@ const router = Router();
 // GET /api/ngos
 router.get('/', ngoController.getAllNGOs.bind(ngoController));
 
-// Get a single NGO by ID or slug
-// GET /api/ngos/:identifier
-router.get('/:identifier', ngoController.getNGO.bind(ngoController));
-
-// ── Authenticated NGO routes ───────────────────────────────────────────────────
-
-// Register a new NGO — any authenticated user can apply
-// POST /api/ngos/register
-router.post(
-  '/register',
-  authenticate,
-  ngoController.registerNGO.bind(ngoController)
-);
+// ── Specific named routes MUST come before /:identifier ────────────────────────
 
 // Get NGO dashboard — NGO managers only
 // GET /api/ngos/dashboard
@@ -34,6 +22,29 @@ router.get(
   requireRole(Role.NGO, Role.SUPER_ADMIN),
   ngoController.getNGODashboard.bind(ngoController)
 );
+
+// Get all NGOs with any status — admin only
+// GET /api/ngos/admin/all
+router.get(
+  '/admin/all',
+  authenticate,
+  requirePermission('canApproveNgos'),
+  ngoController.adminGetAllNGOs.bind(ngoController)
+);
+
+// Register a new NGO
+// POST /api/ngos/register
+router.post(
+  '/register',
+  authenticate,
+  ngoController.registerNGO.bind(ngoController)
+);
+
+// ── Dynamic routes ─────────────────────────────────────────────────────────────
+
+// Get a single NGO by ID or slug — must come AFTER all named routes
+// GET /api/ngos/:identifier
+router.get('/:identifier', ngoController.getNGO.bind(ngoController));
 
 // Update NGO profile
 // PATCH /api/ngos/:id
@@ -83,15 +94,6 @@ router.delete(
 );
 
 // ── Admin routes ───────────────────────────────────────────────────────────────
-
-// Get all NGOs with any status — admin only
-// GET /api/ngos/admin/all
-router.get(
-  '/admin/all',
-  authenticate,
-  requirePermission('canApproveNgos'),
-  ngoController.adminGetAllNGOs.bind(ngoController)
-);
 
 // Approve an NGO
 // PATCH /api/ngos/:id/approve
