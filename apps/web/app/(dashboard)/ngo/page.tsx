@@ -6,6 +6,7 @@ import { Header } from "@/components/shared/Header";
 import { ngoApi } from "@/lib/api";
 import { formatCurrency, getStatusColor, cn } from "@/lib/utils";
 import type { NGODashboard } from "@/types";
+import { useEffect, useState } from "react";
 import {
   Heart,
   Package,
@@ -14,10 +15,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  X,
 } from "lucide-react";
 
 export default function NGODashboardPage() {
   const { user } = useAuth();
+  const [showApprovedBanner, setShowApprovedBanner] = useState(true);
 
   const { data, isLoading } = useQuery({
     queryKey: ["ngo-dashboard"],
@@ -29,6 +32,13 @@ export default function NGODashboardPage() {
 
   const ngo = data?.ngo;
   const stats = data?.stats;
+
+  useEffect(() => {
+    if (ngo?.status === "APPROVED") {
+      const timer = setTimeout(() => setShowApprovedBanner(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [ngo?.status]);
 
   return (
     <div className="flex flex-col flex-1">
@@ -99,12 +109,20 @@ export default function NGODashboardPage() {
             )}
 
             {/* Approved badge */}
-            {ngo.status === "APPROVED" && (
-              <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-brand-green flex-shrink-0" />
-                <p className="text-sm text-green-800">
-                  Your NGO is verified and live on FoodShare
-                </p>
+            {ngo.status === "APPROVED" && showApprovedBanner && (
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-brand-green flex-shrink-0" />
+                  <p className="text-sm text-green-800">
+                    Your NGO is verified and live on FoodShare
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowApprovedBanner(false)}
+                  className="text-green-600 hover:text-green-800 ml-4"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )}
 

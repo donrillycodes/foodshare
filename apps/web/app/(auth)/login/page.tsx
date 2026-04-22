@@ -155,7 +155,16 @@ export default function LoginPage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-500 mt-6">
+          New to FoodShare?{" "}
+          <a
+            href="/register"
+            className="text-brand-green hover:underline font-medium"
+          >
+            Create an account
+          </a>
+        </p>
+        <p className="text-center text-sm text-gray-400 mt-2">
           FoodShare Dashboard — Winnipeg, Canada
         </p>
       </div>

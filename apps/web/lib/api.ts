@@ -40,6 +40,7 @@ apiClient.interceptors.response.use(
 // ── Auth ───────────────────────────────────────────────────────────────────────
 export const authApi = {
   getMe: () => apiClient.get("/api/auth/me"),
+  register: (data: any) => apiClient.post("/api/auth/register", data),
 };
 
 // ── NGO ────────────────────────────────────────────────────────────────────────

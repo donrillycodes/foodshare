@@ -52,7 +52,7 @@ export class AuthService {
           firstName,
           lastName,
           firebaseUid: firebaseUser.uid,
-          role: Role.DONOR,
+          role: input.role === 'NGO' ? Role.NGO : Role.DONOR,
         },
         select: {
           id: true,
