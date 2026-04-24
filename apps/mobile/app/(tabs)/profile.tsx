@@ -43,18 +43,20 @@ export default function ProfileScreen() {
     {
       emoji: "🔔",
       label: "Notifications",
-      onPress: () => {},
+      onPress: () => router.push("/(tabs)/activity"),
     },
+
     {
       emoji: "⚙️",
       label: "Settings",
-      onPress: () => {},
+      onPress: () => router.push("/settings" as any),
     },
     {
       emoji: "❓",
       label: "Help & Support",
-      onPress: () => {},
+      onPress: () => router.push("/support" as any),
     },
+
     {
       emoji: "📄",
       label: "Privacy Policy",
