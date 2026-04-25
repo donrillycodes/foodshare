@@ -25,6 +25,7 @@ app.use(
         env.clientUrl,
         'http://localhost:3000', // Next.js dashboard
         'http://localhost:8081', // Expo mobile app
+        'https://foodshare-web-fawn.vercel.app',
       ];
 
       // Allow requests with no origin — mobile apps and Postman
