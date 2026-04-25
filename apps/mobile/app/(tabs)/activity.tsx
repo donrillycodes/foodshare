@@ -17,11 +17,20 @@ import {
   formatStatus,
 } from "../../lib/utils";
 import type { Donation, FoodPledge, PaginatedResponse } from "../../types";
+import { useLocalSearchParams } from "expo-router";
+import { useNavigationStore } from '../../store/authStore';
+import { useEffect } from 'react';
 
 type Tab = "donations" | "pledges";
 
 export default function ActivityScreen() {
-  const [activeTab, setActiveTab] = useState<Tab>("donations");
+  const { tab } = useLocalSearchParams<{ tab?: Tab }>();
+  const [activeTab, setActiveTab] = useState<Tab>(tab ?? "donations");
+  const { activityTab } = useNavigationStore();
+
+  useEffect(() => {
+    setActiveTab(activityTab);
+  }, [activityTab]);
 
   const { data: donationsData, isLoading: donationsLoading } = useQuery({
     queryKey: ["my-donations"],

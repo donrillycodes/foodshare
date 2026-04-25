@@ -10,9 +10,10 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signIn } from "../../lib/firebase";
+import { signIn, sendPasswordReset } from '../../lib/firebase';
 import { authApi } from "../../lib/api";
 import { useAuthStore } from "../../store/authStore";
 import { COLORS } from "../../lib/utils";
@@ -76,6 +77,26 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+  if (!email) {
+    Alert.alert(
+      'Enter your email',
+      'Please enter your email address first then tap Forgot Password.'
+    );
+    return;
+  }
+  try {
+    await sendPasswordReset(email.trim().toLowerCase());
+    Alert.alert(
+      'Email sent ✉️',
+      'Check your inbox for a password reset link.',
+      [{ text: 'OK' }]
+    );
+  } catch (err) {
+    Alert.alert('Failed', 'Could not send reset email. Please check your email address.');
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -150,6 +171,13 @@ export default function LoginScreen() {
                 <Text style={styles.buttonText}>Sign In</Text>
               )}
             </TouchableOpacity>
+
+            <TouchableOpacity
+  onPress={handleForgotPassword}
+  style={styles.forgotPassword}
+>
+  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+</TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push("/(auth)/register")}
@@ -263,6 +291,15 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "600",
+  },
+  forgotPassword: {
+  alignItems: 'center',
+  paddingVertical: 4,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: COLORS.green,
+    fontWeight: '500',
   },
   registerLink: {
     alignItems: "center",

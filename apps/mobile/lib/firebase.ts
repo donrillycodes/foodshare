@@ -41,6 +41,11 @@ export const logOut = async (): Promise<void> => {
   await signOut(auth);
 };
 
+export const sendPasswordReset = async (email: string): Promise<void> => {
+  const { sendPasswordResetEmail } = await import('firebase/auth');
+  await sendPasswordResetEmail(auth, email);
+};
+
 export const getToken = async (): Promise<string | null> => {
   const user = auth.currentUser;
   if (!user) return null;

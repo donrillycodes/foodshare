@@ -10,10 +10,12 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS, getInitials } from "../../lib/utils";
+import { useNavigationStore } from '../../store/authStore';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { setActivityTab } = useNavigationStore();
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -31,15 +33,22 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
-      emoji: "❤️",
-      label: "My Donations",
-      onPress: () => router.push("/(tabs)/activity"),
-    },
-    {
-      emoji: "📦",
-      label: "My Pledges",
-      onPress: () => router.push("/(tabs)/activity"),
-    },
+  emoji: '❤️',
+  label: 'My Donations',
+  onPress: () => {
+    setActivityTab('donations');
+    router.push('/(tabs)/activity');
+  },
+},
+{
+  emoji: '📦',
+  label: 'My Pledges',
+  onPress: () => {
+    setActivityTab('pledges');
+    router.push('/(tabs)/activity');
+  },
+},
+
     {
       emoji: "🔔",
       label: "Notifications",

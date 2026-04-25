@@ -35,3 +35,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
     }),
 }));
+
+// Navigation store — for deep linking to specific tabs
+interface NavigationState {
+  activityTab: 'donations' | 'pledges';
+  setActivityTab: (tab: 'donations' | 'pledges') => void;
+}
+
+export const useNavigationStore = create<NavigationState>((set) => ({
+  activityTab: 'donations',
+  setActivityTab: (tab) => set({ activityTab: tab }),
+}));
