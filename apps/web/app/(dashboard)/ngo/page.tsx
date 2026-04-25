@@ -210,7 +210,7 @@ export default function NGODashboardPage() {
               No NGO found. Please register your organisation first.
             </p>
             <a
-              href="/register"
+              href="/ngo/profile"
               className="text-sm text-brand-green hover:underline mt-2 inline-block"
             >
               Register your NGO →
