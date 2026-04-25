@@ -32,17 +32,17 @@ export default function NGOProfileScreen() {
   });
 
   const { data: needsData, isLoading: needsLoading } = useQuery({
-    queryKey: ["ngo-needs", ngoData?.id],
-    queryFn: async () => {
-      const response = await foodNeedApi.getAll({
-        ngoId: ngoData!.id,
-        status: "OPEN",
-        limit: 5,
-      });
-      return response.data.data as PaginatedResponse<FoodNeed>;
-    },
-    enabled: !!ngoData?.id,
-  });
+  queryKey: ['ngo-needs', ngoData?.slug],
+  queryFn: async () => {
+    const response = await foodNeedApi.getAll({ limit: 20 });
+    const all = response.data.data as PaginatedResponse<FoodNeed>;
+    return {
+      ...all,
+      items: all.items.filter((n) => n.ngo.id === ngoData!.id),
+    };
+  },
+  enabled: !!ngoData?.id,
+});
 
   const ngo = ngoData;
   const needs = needsData?.items ?? [];
