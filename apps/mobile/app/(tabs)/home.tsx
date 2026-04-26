@@ -93,7 +93,7 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
-            onPress={() => router.push("/(tabs)/activity")}
+            onPress={() => router.push("/notifications")}
           >
             <Text style={styles.notificationEmoji}>🔔</Text>
           </TouchableOpacity>

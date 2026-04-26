@@ -174,11 +174,11 @@ export default function ActivityScreen() {
                 </View>
                 <View style={styles.cardInfo}>
                   <Text style={styles.cardTitle} numberOfLines={1}>
-                    {pledge.foodNeed.title}
+                    {pledge.foodNeed?.title ?? 'Food Pledge'}
                   </Text>
                   <Text style={styles.cardDate}>
-                    {pledge.quantityPledged} {pledge.foodNeed.unit} ·{" "}
-                    {pledge.ngo.name}
+                    {pledge.quantityPledged} {pledge.foodNeed?.unit} ·{' '}
+                    {pledge.ngo?.name ?? 'NGO'}
                   </Text>
                   <Text style={styles.cardDate}>
                     {formatDate(pledge.createdAt)}

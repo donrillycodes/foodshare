@@ -8,7 +8,10 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +32,7 @@ export default function FoodNeedScreen() {
   const [notes, setNotes] = useState("");
   const [dropOffDate, setDropOffDate] = useState("");
   const [showPledgeForm, setShowPledgeForm] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { data: need, isLoading } = useQuery({
     queryKey: ["food-need", id],
@@ -98,6 +102,10 @@ export default function FoodNeedScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -232,13 +240,27 @@ export default function FoodNeedScreen() {
 
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Planned drop off date</Text>
-                  <TextInput
+                  <TouchableOpacity
                     style={styles.input}
-                    value={dropOffDate}
-                    onChangeText={setDropOffDate}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor={COLORS.grayMd}
-                  />
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={{ color: dropOffDate ? COLORS.black : COLORS.grayMd, fontSize: 14 }}>
+                      {dropOffDate || 'Select a date'}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dropOffDate ? new Date(dropOffDate) : new Date()}
+                      mode="date"
+                      minimumDate={new Date()}
+                      onChange={(event, date) => {
+                        setShowDatePicker(false);
+                        if (date) {
+                          setDropOffDate(date.toISOString().split('T')[0]);
+                        }
+                      }}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.field}>
@@ -290,6 +312,7 @@ export default function FoodNeedScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

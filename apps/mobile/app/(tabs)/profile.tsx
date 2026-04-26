@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     {
       emoji: "🔔",
       label: "Notifications",
-      onPress: () => router.push("/(tabs)/activity"),
+      onPress: () => router.push("/notifications"),
     },
 
     {
