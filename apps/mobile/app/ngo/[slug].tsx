@@ -72,14 +72,7 @@ export default function NGOProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Cover image */}
-        {ngo.coverUrl && (
-          <Image
-            source={{ uri: ngo.coverUrl }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-        )}
+
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -89,6 +82,15 @@ export default function NGOProfileScreen() {
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         </View>
+
+                {/* Cover image */}
+        {ngo.coverUrl && (
+          <Image
+            source={{ uri: ngo.coverUrl }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+        )}
 
         {/* NGO hero */}
         <View style={styles.hero}>
