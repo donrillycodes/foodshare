@@ -53,6 +53,8 @@ export interface CreateNGOInput {
     province?: string;
     country?: string;
     postalCode: string;
+    logoUrl?: string;
+    coverUrl?: string;
 }
 
 export interface UpdateNGOInput {
@@ -68,6 +70,8 @@ export interface UpdateNGOInput {
     province?: string;
     country?: string;
     postalCode?: string;
+    logoUrl?: string;
+    coverUrl?: string;
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
