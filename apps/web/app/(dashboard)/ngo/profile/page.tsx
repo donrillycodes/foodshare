@@ -28,6 +28,8 @@ type FormState = {
   province: string;
   country: string;
   postalCode: string;
+  logoUrl: string;
+  coverUrl: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -43,6 +45,8 @@ const EMPTY_FORM: FormState = {
   province: "Manitoba",
   country: "Canada",
   postalCode: "",
+  logoUrl: '',
+coverUrl: '',
 };
 
 interface FormFieldProps {
@@ -135,6 +139,8 @@ export default function NGOProfilePage() {
         name: ngo.name,
         email: ngo.email,
         phone: ngo.phone ?? "",
+        logoUrl: ngo.logoUrl ?? '',
+        coverUrl: ngo.coverUrl ?? '',
         description: ngo.description,
         mission: ngo.mission ?? "",
         category: ngo.category,
@@ -256,6 +262,20 @@ export default function NGOProfilePage() {
                   name="website"
                   type="url"
                   placeholder="https://yourorg.ca"
+                  {...fieldProps}
+                />
+                <FormField
+                  label="Logo URL"
+                  name="logoUrl"
+                  type="url"
+                  placeholder="https://yourorg.ca/logo.png"
+                  {...fieldProps}
+                />
+                <FormField
+                  label="Cover Image URL"
+                  name="coverUrl"
+                  type="url"
+                  placeholder="https://yourorg.ca/cover.jpg"
                   {...fieldProps}
                 />
                 <FormField
