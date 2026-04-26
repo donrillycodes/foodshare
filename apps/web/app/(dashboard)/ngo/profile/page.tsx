@@ -385,8 +385,17 @@ export default function NGOProfilePage() {
               </div>
 
               <div className="space-y-3">
+                {ngo!.logoUrl && (
+                  <div className="flex justify-center mb-4">
+                    <img
+                      src={ngo!.logoUrl}
+                      alt={ngo!.name}
+                      className="w-24 h-24 rounded-full object-cover border border-gray-100"
+                    />
+                  </div>
+                )}
                 {[
-                  { label: "Name", value: ngo!.name },
+                  { label: 'Name', value: ngo!.name },
                   { label: "Email", value: ngo!.email },
                   { label: "Phone", value: ngo!.phone },
                   { label: "Category", value: formatStatus(ngo!.category) },

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Image,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -83,9 +84,17 @@ export default function NGOProfileScreen() {
 
         {/* NGO hero */}
         <View style={styles.hero}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>{ngo.name.charAt(0)}</Text>
-          </View>
+          {ngo.logoUrl ? (
+            <Image
+              source={{ uri: ngo.logoUrl }}
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.logo}>
+              <Text style={styles.logoText}>{ngo.name.charAt(0)}</Text>
+            </View>
+          )}
           <Text style={styles.ngoName}>{ngo.name}</Text>
           <Text style={styles.ngoCategory}>
             {formatCategory(ngo.category)} · {ngo.city}, {ngo.province}
@@ -374,4 +383,10 @@ const styles = StyleSheet.create({
   bottomPadding: {
     height: 40,
   },
+  logoImage: {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+  marginBottom: 12,
+},
 });

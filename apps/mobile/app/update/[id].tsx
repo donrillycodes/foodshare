@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Image,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -74,9 +75,11 @@ export default function UpdateScreen() {
 
         {/* Cover image placeholder */}
         {update.coverImageUrl && (
-          <View style={styles.coverImage}>
-            <Text style={styles.coverImageEmoji}>🖼️</Text>
-          </View>
+          <Image
+            source={{ uri: update.coverImageUrl }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
         )}
 
         {/* Content */}
@@ -243,4 +246,9 @@ const styles = StyleSheet.create({
   bottomPadding: {
     height: 40,
   },
+  coverImage: {
+  height: 200,
+  width: '100%',
+  backgroundColor: COLORS.grayLt,
+},
 });
