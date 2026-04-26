@@ -5,6 +5,14 @@
   --color-brand-green-dk: #145e38;
   --color-brand-green-lt: #e8f5ee;
   --color-brand-green-mid: #2d9e64;
+
+  /* Sidebar */
+  --color-sidebar: #0d1f17;
+  --color-sidebar-active: #1a7a4a;
+  --color-sidebar-accent: #4de69e;
+
+  /* Page surface */
+  --color-page: #f6f8fa;
 }
 
 * {
@@ -21,10 +29,44 @@ body {
 
 body {
   color: #1a1a1a;
-  background: #f9fafb;
+  background: #f6f8fa;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Sidebar nav item hover handled via JS onMouseEnter to support rgba */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  transition: background 150ms, color 150ms;
+  text-decoration: none;
+}
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+.sidebar-item.active {
+  background: rgba(26, 122, 74, 0.2);
+  color: #4de69e;
+  border-left: 2px solid #1a7a4a;
+  padding-left: 8px;
+}
+
+.sidebar-section-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0 10px;
+  margin-top: 16px;
+  margin-bottom: 4px;
+  display: block;
 }

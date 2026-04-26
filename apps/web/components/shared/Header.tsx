@@ -27,13 +27,9 @@ export function Header({ title, subtitle }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
       }
     };
@@ -47,7 +43,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       const response = await apiClient.get("/api/notifications/unread-count");
       return response.data.data.count as number;
     },
-    refetchInterval: 30000, // refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   const { data: notificationsData } = useQuery({
@@ -70,8 +66,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   });
 
   const markReadMutation = useMutation({
-    mutationFn: (id: string) =>
-      apiClient.patch(`/api/notifications/${id}/read`),
+    mutationFn: (id: string) => apiClient.patch(`/api/notifications/${id}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["unread-count"] });
       queryClient.refetchQueries({ queryKey: ["unread-count"] });
@@ -83,24 +78,26 @@ export function Header({ title, subtitle }: HeaderProps) {
   const notifications = notificationsData ?? [];
 
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
+    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
       {/* Page title */}
       <div>
-        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+        <h1 className="text-base font-semibold text-gray-900 leading-tight">{title}</h1>
+        {subtitle && (
+          <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+        )}
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3" ref={dropdownRef}>
+      <div className="flex items-center gap-2" ref={dropdownRef}>
         {/* Notification bell */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors duration-150"
+            className="relative w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium leading-none" style={{ fontSize: "9px" }}>
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
@@ -108,13 +105,12 @@ export function Header({ title, subtitle }: HeaderProps) {
 
           {/* Notifications dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-              {/* Header */}
+            <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-900">
                   Notifications
                   {unreadCount > 0 && (
-                    <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                    <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
                       {unreadCount} unread
                     </span>
                   )}
@@ -129,15 +125,11 @@ export function Header({ title, subtitle }: HeaderProps) {
                   </button>
                 )}
               </div>
-
-              {/* Notification list */}
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-8 text-center">
                     <Bell className="w-6 h-6 text-gray-200 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400">
-                      No notifications yet
-                    </p>
+                    <p className="text-xs text-gray-400">No notifications yet</p>
                   </div>
                 ) : (
                   notifications.map((notification) => (
@@ -150,26 +142,18 @@ export function Header({ title, subtitle }: HeaderProps) {
                       }}
                       className={cn(
                         "px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors",
-                        notification.status === "UNREAD"
-                          ? "bg-brand-green-lt"
-                          : "bg-white",
+                        notification.status === "UNREAD" ? "bg-brand-green-lt" : "bg-white",
                       )}
                     >
                       <div className="flex items-start gap-2">
                         {notification.status === "UNREAD" && (
-                          <div className="w-2 h-2 rounded-full bg-brand-green flex-shrink-0 mt-1.5" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-brand-green flex-shrink-0 mt-1.5" />
                         )}
-                        <div
-                          className={
-                            notification.status === "UNREAD" ? "" : "ml-4"
-                          }
-                        >
+                        <div className={notification.status === "UNREAD" ? "" : "ml-3.5"}>
                           <p className="text-xs font-medium text-gray-900">
                             {notification.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {notification.body}
-                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">{notification.body}</p>
                           <p className="text-xs text-gray-400 mt-1">
                             {formatRelativeTime(notification.createdAt)}
                           </p>
@@ -184,8 +168,8 @@ export function Header({ title, subtitle }: HeaderProps) {
         </div>
 
         {/* User avatar */}
-        <div className="w-9 h-9 rounded-full bg-brand-green-lt flex items-center justify-center cursor-pointer">
-          <span className="text-brand-green text-sm font-semibold">
+        <div className="w-8 h-8 rounded-full bg-brand-green-lt flex items-center justify-center cursor-pointer">
+          <span className="text-brand-green text-xs font-semibold">
             {user?.firstName?.charAt(0)}
             {user?.lastName?.charAt(0)}
           </span>
