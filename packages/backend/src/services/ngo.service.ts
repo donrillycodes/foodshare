@@ -50,6 +50,8 @@ export class NGOService {
         slug,
         email: input.email.toLowerCase().trim(),
         phone: input.phone,
+        logoUrl: input.logoUrl || null,
+        coverUrl: input.coverUrl || null,
         description: input.description,
         mission: input.mission,
         category: input.category as NGOCategory,
@@ -335,6 +337,8 @@ export class NGOService {
         ...(input.province && { province: input.province }),
         ...(input.country && { country: input.country }),
         ...(input.postalCode && { postalCode: input.postalCode }),
+        ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
+        ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
       },
       select: {
         id: true,
