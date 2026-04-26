@@ -72,6 +72,14 @@ export default function NGOProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Cover image */}
+        {ngo.coverUrl && (
+          <Image
+            source={{ uri: ngo.coverUrl }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+        )}
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -388,5 +396,10 @@ const styles = StyleSheet.create({
   height: 80,
   borderRadius: 40,
   marginBottom: 12,
-},
+  },
+  coverImage: {
+  width: '100%',
+  height: 180,
+  backgroundColor: COLORS.grayLt,
+  },
 });
