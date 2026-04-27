@@ -7,6 +7,7 @@ import {
 } from '../utils/pagination';
 import { FoodPledgeStatus, FoodNeedStatus, MemberStatus } from '@prisma/client';
 import { CreateFoodPledgeInput } from '../types';
+import emailService from './email.service';
 
 export class FoodPledgeService {
   // Create a new food pledge
@@ -257,6 +258,28 @@ export class FoodPledgeService {
       },
     });
 
+    // Send pledge confirmed email to donor
+    const pledgeDetails = await db.foodPledge.findUnique({
+      where: { id: pledgeId },
+      select: {
+        quantityPledged: true,
+        donor: { select: { email: true, firstName: true, lastName: true } },
+        ngo: { select: { name: true } },
+        foodNeed: { select: { itemName: true, unit: true } },
+      },
+    });
+
+    if (pledgeDetails?.donor) {
+      await emailService.sendPledgeConfirmed(
+        pledgeDetails.donor.email,
+        `${pledgeDetails.donor.firstName} ${pledgeDetails.donor.lastName}`,
+        pledgeDetails.ngo.name,
+        pledgeDetails.foodNeed.itemName,
+        pledgeDetails.quantityPledged,
+        pledgeDetails.foodNeed.unit
+      );
+    }
+
     logger.info(`Pledge confirmed: ${pledgeId} by NGO user: ${ngoUserId}`);
 
     return updated;
@@ -344,6 +367,28 @@ export class FoodPledgeService {
       });
 
       logger.info(`Food need fully fulfilled: ${pledge.foodNeedId}`);
+    }
+
+    // Send pledge fulfilled email to donor
+    const pledgeDetails = await db.foodPledge.findUnique({
+      where: { id: pledgeId },
+      select: {
+        quantityPledged: true,
+        donor: { select: { email: true, firstName: true, lastName: true } },
+        ngo: { select: { name: true } },
+        foodNeed: { select: { itemName: true, unit: true } },
+      },
+    });
+
+    if (pledgeDetails?.donor) {
+      await emailService.sendPledgeFulfilled(
+        pledgeDetails.donor.email,
+        `${pledgeDetails.donor.firstName} ${pledgeDetails.donor.lastName}`,
+        pledgeDetails.ngo.name,
+        pledgeDetails.foodNeed.itemName,
+        pledgeDetails.quantityPledged,
+        pledgeDetails.foodNeed.unit
+      );
     }
 
     logger.info(`Pledge fulfilled: ${pledgeId} by NGO user: ${ngoUserId}`);

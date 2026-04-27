@@ -13,6 +13,7 @@ import {
   MemberStatus,
 } from '@prisma/client';
 import { CreateNGOInput, UpdateNGOInput, NGOQueryFilters } from '../types';
+import emailService from './email.service';
 
 export class NGOService {
   // Register a new NGO
@@ -467,12 +468,15 @@ export class NGOService {
   async approveNGO(ngoId: string, adminId: string) {
     const ngo = await db.nGO.findUnique({
       where: { id: ngoId },
+      include: {
+        manager: {
+          select: { email: true },
+        },
+      },
     });
-
     if (!ngo) {
       throw new AppError('NGO not found', 404);
     }
-
     if (ngo.status === NGOStatus.APPROVED) {
       throw new AppError('This NGO is already approved.', 409);
     }
@@ -493,6 +497,11 @@ export class NGOService {
       },
     });
 
+    // Send approval email after successful update
+    if (ngo.manager?.email) {
+      await emailService.sendNGOApproved(ngo.manager.email, ngo.name);
+    }
+
     logger.info(`NGO approved: ${ngoId} by admin: ${adminId}`);
 
     return updated;
@@ -502,12 +511,15 @@ export class NGOService {
   async rejectNGO(ngoId: string, adminId: string, reason: string) {
     const ngo = await db.nGO.findUnique({
       where: { id: ngoId },
+      include: {
+        manager: {
+          select: { email: true },
+        },
+      },
     });
-
     if (!ngo) {
       throw new AppError('NGO not found', 404);
     }
-
     if (ngo.status === NGOStatus.REJECTED) {
       throw new AppError('This NGO is already rejected.', 409);
     }
@@ -525,6 +537,11 @@ export class NGOService {
         rejectionReason: true,
       },
     });
+
+    // Send rejection email after successful update
+    if (ngo.manager?.email) {
+      await emailService.sendNGORejected(ngo.manager.email, ngo.name, reason);
+    }
 
     logger.info(`NGO rejected: ${ngoId} by admin: ${adminId}`);
 
@@ -602,7 +619,7 @@ export class NGOService {
     invitedById: string,
     email: string,
     role: NGOMemberRole
-  ) {
+    ) {
     // Find the user by email
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase().trim() },
@@ -647,6 +664,21 @@ export class NGOService {
         },
       },
     });
+
+    // Send invite email
+    // Fetch NGO name and inviter name for email
+    const [ngo, inviter] = await Promise.all([
+      db.nGO.findUnique({ where: { id: ngoId }, select: { name: true } }),
+      db.user.findUnique({ where: { id: invitedById }, select: { firstName: true, lastName: true } }),
+    ]);
+
+    if (ngo && inviter) {
+      await emailService.sendNGOMemberInvite(
+        user.email,
+        ngo.name,
+        `${inviter.firstName} ${inviter.lastName}`
+      );
+    }
 
     logger.info(
       `NGO member invited: ${user.email} to NGO: ${ngoId} by: ${invitedById}`

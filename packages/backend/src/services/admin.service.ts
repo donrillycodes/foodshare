@@ -12,6 +12,7 @@ import {
   MemberStatus,
   Role,
 } from '@prisma/client';
+import emailService from './email.service';
 
 export class AdminService {
   // Get platform-wide analytics
@@ -252,7 +253,21 @@ export class AdminService {
       },
     });
 
-    logger.info(`Admin invited: ${email} by SUPER_ADMIN: ${superAdminId}`);
+    // Fetch inviter name for email
+    const inviter = await db.user.findUnique({
+      where: { id: superAdminId },
+      select: { firstName: true, lastName: true },
+    });
+
+    await emailService.sendAdminInvite(
+      user.email,
+      inviter ? `${inviter.firstName} ${inviter.lastName}` : 'FoodShare Admin'
+    );
+
+    logger.info(
+      `Admin invited: ${email} by SUPER_ADMIN: ${superAdminId}`
+    );
+
 
     return adminMember;
   }

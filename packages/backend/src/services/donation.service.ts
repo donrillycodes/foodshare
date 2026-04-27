@@ -8,6 +8,7 @@ import {
 } from '../utils/pagination';
 import { DonationStatus, PaymentProvider } from '@prisma/client';
 import { CreateDonationInput } from '../types';
+import emailService from './email.service';
 
 export class DonationService {
   // Create a Stripe PaymentIntent and a PENDING donation record
@@ -174,6 +175,28 @@ export class DonationService {
     logger.info(
       `Donation completed: ${donation.id} amount: ${donation.amount} ${donation.currency}`
     );
+
+    // Send donation receipt email
+    const donationWithDetails = await db.donation.findUnique({
+      where: { id: donation.id },
+      select: {
+        amount: true,
+        currency: true,
+        isAnonymous: true,
+        donor: { select: { email: true, firstName: true, lastName: true } },
+        ngo: { select: { name: true } },
+      },
+    });
+
+    if (donationWithDetails?.donor && !donationWithDetails.isAnonymous) {
+      await emailService.sendDonationReceipt(
+        donationWithDetails.donor.email,
+        `${donationWithDetails.donor.firstName} ${donationWithDetails.donor.lastName}`,
+        donationWithDetails.ngo.name,
+        Number(donationWithDetails.amount),
+        donationWithDetails.currency
+      );
+    }
 
     // TODO: Send FCM push notification to donor
     // We will implement this when we build the notification service
