@@ -267,7 +267,7 @@ export class NGOController {
         entityId: id,
         previousState: { status: previousNgo.status },
         newState: { status: ngo.status },
-        notes: req.body.notes,
+        notes: req.body?.notes,
       });
 
       responses.ok(res, 'NGO approved successfully', { ngo });
