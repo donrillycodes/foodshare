@@ -13,7 +13,8 @@ export class EmailService {
   // ── NGO Approved ───────────────────────────────────────────────────────────
   async sendNGOApproved(to: string, ngoName: string) {
     try {
-      await resend.emails.send({
+      logger.info(`Attempting to send NGO approved email to: ${to} for NGO: ${ngoName}`);
+      const result = await resend.emails.send({
         from: FROM,
         to,
         subject: `🎉 ${ngoName} is now live on FoodShare`,
@@ -45,7 +46,7 @@ export class EmailService {
           </div>
         `,
       });
-      logger.info(`Email sent: NGO approved — ${to}`);
+      logger.info(`Email sent successfully: NGO approved — ${to}, id: ${result.data?.id}`);
     } catch (error) {
       logger.error('Failed to send NGO approved email', { error, to });
     }
