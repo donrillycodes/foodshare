@@ -2,16 +2,35 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import { Header } from "@/components/shared/Header";
 import { updateApi } from "@/lib/api";
-import { formatRelativeTime, getStatusColor, cn } from "@/lib/utils";
-import type { NGOUpdate, PaginatedResponse } from "@/types";
-import { Flag, Eye, FileText } from "lucide-react";
+import { formatRelativeTime } from "@/lib/utils";
+import type { NGOUpdate, UpdateStatus, PaginatedResponse } from "@/types";
+import { Flag, Eye, FileText, Pin, Building2 } from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { Button } from "@/components/ui/Button";
+import { Badge, statusToTone } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
+import { FilterPills } from "@/components/ui/FilterPills";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TextareaField } from "@/components/ui/FormField";
+
+const STATUS_PILLS: { value: UpdateStatus; label: string }[] = [
+  { value: "PUBLISHED", label: "Published" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "ARCHIVED", label: "Archived" },
+];
+
+function formatType(type: string): string {
+  return type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) =>
+    c.toUpperCase(),
+  );
+}
 
 export default function ContentPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState("PUBLISHED");
+  const [statusFilter, setStatusFilter] = useState<UpdateStatus>("PUBLISHED");
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [flaggingId, setFlaggingId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState("");
@@ -32,6 +51,7 @@ export default function ContentPage() {
       updateApi.flag(id, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+      queryClient.refetchQueries({ queryKey: ["admin-content"] });
       setFlaggingId(null);
       setFlagReason("");
     },
@@ -42,135 +62,268 @@ export default function ContentPage() {
   return (
     <AdminGuard permission="canManageContent">
       <div className="flex flex-col flex-1">
-        <Header title="Content Moderation" subtitle="Review and moderate NGO posts and updates" />
+        <Header
+          title="Content moderation"
+          subtitle="Review and moderate NGO posts and updates"
+        />
 
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="flex gap-1.5">
-              {["PUBLISHED", "DRAFT", "ARCHIVED"].map((status) => (
+          <div className="max-w-5xl space-y-5">
+            <FilterPills
+              options={STATUS_PILLS}
+              value={statusFilter}
+              onChange={(v) => {
+                setStatusFilter(v);
+                setFlaggingId(null);
+              }}
+              rightSlot={
                 <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-                    statusFilter === status
-                      ? "bg-brand-green text-white"
-                      : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300",
-                  )}
+                  onClick={() => setFlaggedOnly((v) => !v)}
+                  className={
+                    flaggedOnly
+                      ? "inline-flex items-center gap-1.5 text-xs font-medium px-3 h-7 rounded-full bg-red-600 text-white"
+                      : "inline-flex items-center gap-1.5 text-xs font-medium px-3 h-7 rounded-full bg-white border border-border-default text-ink-soft hover:border-border-default hover:bg-surface-muted transition-colors"
+                  }
                 >
-                  {status.charAt(0) + status.slice(1).toLowerCase()}
+                  <Flag className="w-3 h-3" /> Flagged only
                 </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setFlaggedOnly(!flaggedOnly)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-                flaggedOnly ? "bg-red-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300",
-              )}
-            >
-              <Flag className="w-3 h-3" />
-              Flagged only
-            </button>
+              }
+            />
+
+            {isLoading ? (
+              <ContentSkeleton />
+            ) : updates.length === 0 ? (
+              <EmptyState
+                icon={<FileText className="w-5 h-5" />}
+                title={
+                  flaggedOnly
+                    ? "Nothing flagged"
+                    : `No ${statusFilter.toLowerCase()} content`
+                }
+                description={
+                  flaggedOnly
+                    ? "No posts in this bucket are flagged for review."
+                    : "Nothing posted in this bucket yet."
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {updates.map((update) => (
+                  <UpdateCard
+                    key={update.id}
+                    update={update}
+                    flagging={flaggingId === update.id}
+                    flagReason={flagReason}
+                    setFlagReason={setFlagReason}
+                    onStartFlag={() => {
+                      setFlaggingId(update.id);
+                      setFlagReason("");
+                    }}
+                    onCancelFlag={() => {
+                      setFlaggingId(null);
+                      setFlagReason("");
+                    }}
+                    onConfirmFlag={() =>
+                      flagMutation.mutate({
+                        id: update.id,
+                        reason: flagReason,
+                      })
+                    }
+                    isFlagging={flagMutation.isPending}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
-                  <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
-                  <div className="h-3 bg-gray-100 rounded w-1/3" />
-                </div>
-              ))}
-            </div>
-          ) : updates.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
-              <FileText className="w-7 h-7 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No content found</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {updates.map((update) => (
-                <div
-                  key={update.id}
-                  className={cn(
-                    "bg-white rounded-xl border overflow-hidden hover:shadow-sm transition-shadow",
-                    update.isFlagged ? "border-red-200" : "border-gray-100",
-                  )}
-                >
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="text-sm font-medium text-gray-900">{update.title}</p>
-                          <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", getStatusColor(update.status))}>
-                            {update.status}
-                          </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
-                            {update.type.replace(/_/g, " ")}
-                          </span>
-                          {update.isFlagged && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">Flagged</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <p className="text-xs text-gray-500">{update.ngo.name}</p>
-                          <span className="text-gray-300">·</span>
-                          <p className="text-xs text-gray-400">{formatRelativeTime(update.publishedAt ?? update.createdAt)}</p>
-                          <span className="text-gray-300">·</span>
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <Eye className="w-3 h-3" />{update.viewsCount} views
-                          </p>
-                        </div>
-                        {update.isFlagged && update.flaggedReason && (
-                          <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                            <p className="text-xs text-red-700">
-                              <span className="font-medium">Flag reason: </span>{update.flaggedReason}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      {!update.isFlagged && (
-                        <button
-                          onClick={() => setFlaggingId(update.id)}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex-shrink-0"
-                        >
-                          <Flag className="w-3.5 h-3.5" />
-                          Flag
-                        </button>
-                      )}
-                    </div>
-
-                    {flaggingId === update.id && (
-                      <div className="mt-4 space-y-2">
-                        <textarea
-                          value={flagReason}
-                          onChange={(e) => setFlagReason(e.target.value)}
-                          placeholder="Enter flag reason (minimum 10 characters)..."
-                          rows={2}
-                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => { if (flagReason.trim().length >= 10) { flagMutation.mutate({ id: update.id, reason: flagReason }); } }}
-                            disabled={flagReason.trim().length < 10 || flagMutation.isPending}
-                            className="px-3.5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-                          >
-                            {flagMutation.isPending ? "Flagging..." : "Confirm Flag"}
-                          </button>
-                          <button onClick={() => { setFlaggingId(null); setFlagReason(""); }} className="px-3.5 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </AdminGuard>
+  );
+}
+
+// ---------- Card ----------
+
+interface UpdateCardProps {
+  update: NGOUpdate;
+  flagging: boolean;
+  flagReason: string;
+  setFlagReason: (v: string) => void;
+  onStartFlag: () => void;
+  onCancelFlag: () => void;
+  onConfirmFlag: () => void;
+  isFlagging: boolean;
+}
+
+function UpdateCard({
+  update,
+  flagging,
+  flagReason,
+  setFlagReason,
+  onStartFlag,
+  onCancelFlag,
+  onConfirmFlag,
+  isFlagging,
+}: UpdateCardProps) {
+  return (
+    <div
+      className={
+        update.isFlagged
+          ? "bg-white rounded-xl border border-red-200 overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+          : "bg-white rounded-xl border border-border-subtle hover:border-border-default overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors"
+      }
+    >
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Cover thumb */}
+          {update.coverImageUrl ? (
+            <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-muted flex-shrink-0">
+              <Image
+                src={update.coverImageUrl}
+                alt={update.title}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </div>
+          ) : (
+            <div className="w-20 h-20 rounded-lg bg-surface-muted flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-ink-subtle" />
+            </div>
+          )}
+
+          {/* Body */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {update.isPinned && (
+                    <Pin className="w-3 h-3 text-amber-500" />
+                  )}
+                  <p className="text-sm font-semibold text-ink truncate">
+                    {update.title}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mt-1.5">
+                  <Badge tone={statusToTone(update.status)} size="sm">
+                    {update.status}
+                  </Badge>
+                  <Badge tone="muted" size="sm">
+                    {formatType(update.type)}
+                  </Badge>
+                  {update.isFlagged && (
+                    <Badge tone="danger" size="sm" dot>
+                      Flagged
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {!update.isFlagged && !flagging && (
+                <Button
+                  size="sm"
+                  variant="danger-ghost"
+                  onClick={onStartFlag}
+                >
+                  <Flag className="w-3.5 h-3.5" /> Flag
+                </Button>
+              )}
+            </div>
+
+            {/* NGO + meta */}
+            <div className="flex items-center gap-2 flex-wrap mt-2.5 text-xs text-ink-subtle">
+              <Avatar
+                src={update.ngo.logoUrl}
+                name={update.ngo.name}
+                size="xs"
+              />
+              <span className="flex items-center gap-1 text-ink-soft">
+                <Building2 className="w-3 h-3" /> {update.ngo.name}
+              </span>
+              <span>·</span>
+              <span>
+                {formatRelativeTime(update.publishedAt ?? update.createdAt)}
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                <Eye className="w-3 h-3" /> {update.viewsCount} views
+              </span>
+              <span>·</span>
+              <span>
+                by {update.postedBy.firstName} {update.postedBy.lastName}
+              </span>
+            </div>
+
+            {/* Summary preview */}
+            {update.summary && (
+              <p className="text-xs text-ink-soft mt-3 line-clamp-2">
+                {update.summary}
+              </p>
+            )}
+
+            {/* Flag reason */}
+            {update.isFlagged && update.flaggedReason && (
+              <div className="mt-3 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                <p className="text-xs text-red-700">
+                  <span className="font-semibold">Flagged: </span>
+                  {update.flaggedReason}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Flag composer */}
+        {flagging && (
+          <div className="mt-4 pt-4 border-t border-border-subtle space-y-3">
+            <TextareaField
+              label="Flag reason"
+              hint="Minimum 10 characters — visible to the NGO"
+              rows={3}
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+              placeholder="Why does this need moderation? Be specific so the NGO can fix it."
+              autoFocus
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="danger"
+                onClick={onConfirmFlag}
+                disabled={flagReason.trim().length < 10 || isFlagging}
+              >
+                <Flag className="w-3.5 h-3.5" />
+                {isFlagging ? "Flagging…" : "Confirm flag"}
+              </Button>
+              <Button variant="ghost" onClick={onCancelFlag}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Skeleton ----------
+
+function ContentSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="bg-white rounded-xl border border-border-subtle p-5 animate-pulse"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-lg bg-gray-100" />
+            <div className="flex-1 space-y-2.5">
+              <div className="h-4 bg-gray-100 rounded w-1/2" />
+              <div className="h-3 bg-gray-100 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-2/3" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

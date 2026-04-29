@@ -4,14 +4,39 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/shared/Header";
 import { foodPledgeApi, ngoApi } from "@/lib/api";
-import { formatDate, getStatusColor, cn } from "@/lib/utils";
-import type { FoodPledge, NGODashboard, PaginatedResponse } from "@/types";
-import { Heart, CheckCircle, XCircle, Clock } from "lucide-react";
+import { formatDate, formatRelativeTime } from "@/lib/utils";
+import type {
+  FoodPledge,
+  FoodPledgeStatus,
+  NGODashboard,
+  PaginatedResponse,
+} from "@/types";
+import {
+  Heart,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  PackageCheck,
+} from "lucide-react";
 import { NGOGuard } from "@/components/ngo/NGOGuard";
+import { Button } from "@/components/ui/Button";
+import { Badge, statusToTone } from "@/components/ui/Badge";
+import { FilterPills } from "@/components/ui/FilterPills";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Avatar } from "@/components/ui/Avatar";
+import { TextField } from "@/components/ui/FormField";
+
+const STATUS_PILLS: { value: FoodPledgeStatus; label: string }[] = [
+  { value: "PENDING", label: "Pending" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "FULFILLED", label: "Fulfilled" },
+  { value: "CANCELLED", label: "Cancelled" },
+  { value: "EXPIRED", label: "Expired" },
+];
 
 export default function NGOPledgesPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState("PENDING");
+  const [statusFilter, setStatusFilter] = useState<FoodPledgeStatus>("PENDING");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
 
@@ -28,34 +53,34 @@ export default function NGOPledgesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["ngo-pledges", ngoId, statusFilter],
     queryFn: async () => {
-      const response = await foodPledgeApi.getByNGO(ngoId!, { status: statusFilter });
+      const response = await foodPledgeApi.getByNGO(ngoId!, {
+        status: statusFilter,
+      });
       return response.data.data as PaginatedResponse<FoodPledge>;
     },
     enabled: !!ngoId,
   });
 
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["ngo-pledges"] });
+    queryClient.refetchQueries({ queryKey: ["ngo-pledges"] });
+  };
+
   const confirmMutation = useMutation({
     mutationFn: (id: string) => foodPledgeApi.confirm(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ngo-pledges"] });
-      queryClient.refetchQueries({ queryKey: ["ngo-pledges"] });
-    },
+    onSuccess: refresh,
   });
 
   const fulfilMutation = useMutation({
     mutationFn: (id: string) => foodPledgeApi.fulfil(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ngo-pledges"] });
-      queryClient.refetchQueries({ queryKey: ["ngo-pledges"] });
-    },
+    onSuccess: refresh,
   });
 
   const cancelMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       foodPledgeApi.cancel(id, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ngo-pledges"] });
-      queryClient.refetchQueries({ queryKey: ["ngo-pledges"] });
+      refresh();
       setCancellingId(null);
       setCancelReason("");
     },
@@ -66,147 +91,236 @@ export default function NGOPledgesPage() {
   return (
     <NGOGuard>
       <div className="flex flex-col flex-1">
-        <Header title="Food Pledges" subtitle="Manage incoming food donation pledges" />
+        <Header
+          title="Food Pledges"
+          subtitle="Manage incoming food donation pledges"
+        />
 
         <div className="flex-1 p-6 overflow-y-auto">
-          {/* Filter pills */}
-          <div className="flex gap-1.5 mb-5">
-            {["PENDING", "CONFIRMED", "FULFILLED", "CANCELLED", "EXPIRED"].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-                  statusFilter === s
-                    ? "bg-brand-green text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300",
-                )}
-              >
-                {s.charAt(0) + s.slice(1).toLowerCase()}
-              </button>
-            ))}
+          <div className="max-w-5xl space-y-5">
+            <FilterPills
+              options={STATUS_PILLS}
+              value={statusFilter}
+              onChange={setStatusFilter}
+            />
+
+            {isLoading ? (
+              <PledgeSkeleton />
+            ) : pledges.length === 0 ? (
+              <EmptyState
+                icon={<Heart className="w-5 h-5" />}
+                title={`No ${statusFilter.toLowerCase()} pledges`}
+                description={
+                  statusFilter === "PENDING"
+                    ? "When donors pledge to your food needs, they will appear here for review."
+                    : "Nothing in this bucket right now."
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {pledges.map((pledge) => (
+                  <PledgeCard
+                    key={pledge.id}
+                    pledge={pledge}
+                    cancelling={cancellingId === pledge.id}
+                    cancelReason={cancelReason}
+                    setCancelReason={setCancelReason}
+                    onStartCancel={() => {
+                      setCancellingId(pledge.id);
+                      setCancelReason("");
+                    }}
+                    onCancelDismiss={() => setCancellingId(null)}
+                    onConfirmCancel={() =>
+                      cancelMutation.mutate({
+                        id: pledge.id,
+                        reason: cancelReason,
+                      })
+                    }
+                    onConfirm={() => confirmMutation.mutate(pledge.id)}
+                    onFulfil={() => fulfilMutation.mutate(pledge.id)}
+                    isConfirming={confirmMutation.isPending}
+                    isFulfilling={fulfilMutation.isPending}
+                    isCancelling={cancelMutation.isPending}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* List */}
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
-                  <div className="h-4 bg-gray-100 rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : pledges.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
-              <Heart className="w-7 h-7 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No {statusFilter.toLowerCase()} pledges</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pledges.map((pledge) => (
-                <div key={pledge.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {pledge.donor.firstName} {pledge.donor.lastName}
-                        </p>
-                        <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", getStatusColor(pledge.status))}>
-                          {pledge.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        {pledge.foodNeed.title} ·{" "}
-                        <span className="font-medium">{pledge.quantityPledged} {pledge.foodNeed.unit}</span>
-                      </p>
-                      {pledge.dropOffDate && (
-                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Drop off: {formatDate(pledge.dropOffDate)}
-                        </p>
-                      )}
-                      {pledge.notes && (
-                        <p className="text-xs text-gray-500 mt-1 italic">"{pledge.notes}"</p>
-                      )}
-                      {pledge.fulfilledAt && (
-                        <p className="text-xs text-green-600 mt-1">Fulfilled on {formatDate(pledge.fulfilledAt)}</p>
-                      )}
-                      {pledge.cancellationReason && (
-                        <p className="text-xs text-red-500 mt-1">Cancelled: {pledge.cancellationReason}</p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                      {cancellingId === pledge.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={cancelReason}
-                            onChange={(e) => setCancelReason(e.target.value)}
-                            placeholder="Reason (min 5 chars)"
-                            className="text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-green w-40"
-                          />
-                          <button
-                            onClick={() => {
-                              if (cancelReason.trim().length >= 5) {
-                                cancelMutation.mutate({ id: pledge.id, reason: cancelReason });
-                              }
-                            }}
-                            disabled={cancelReason.trim().length < 5 || cancelMutation.isPending}
-                            className="text-xs px-2.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => setCancellingId(null)}
-                            className="text-xs px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                          >
-                            Back
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          {pledge.status === "PENDING" && (
-                            <button
-                              onClick={() => confirmMutation.mutate(pledge.id)}
-                              disabled={confirmMutation.isPending}
-                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-brand-green-lt text-brand-green rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              Confirm
-                            </button>
-                          )}
-                          {(pledge.status === "PENDING" || pledge.status === "CONFIRMED") && (
-                            <>
-                              <button
-                                onClick={() => fulfilMutation.mutate(pledge.id)}
-                                disabled={fulfilMutation.isPending}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Fulfilled
-                              </button>
-                              <button
-                                onClick={() => setCancellingId(pledge.id)}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                              >
-                                <XCircle className="w-3.5 h-3.5" />
-                                Cancel
-                              </button>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </NGOGuard>
+  );
+}
+
+// ---------- Card ----------
+
+interface PledgeCardProps {
+  pledge: FoodPledge;
+  cancelling: boolean;
+  cancelReason: string;
+  setCancelReason: (v: string) => void;
+  onStartCancel: () => void;
+  onCancelDismiss: () => void;
+  onConfirmCancel: () => void;
+  onConfirm: () => void;
+  onFulfil: () => void;
+  isConfirming: boolean;
+  isFulfilling: boolean;
+  isCancelling: boolean;
+}
+
+function PledgeCard({
+  pledge,
+  cancelling,
+  cancelReason,
+  setCancelReason,
+  onStartCancel,
+  onCancelDismiss,
+  onConfirmCancel,
+  onConfirm,
+  onFulfil,
+  isConfirming,
+  isFulfilling,
+  isCancelling,
+}: PledgeCardProps) {
+  const donorName = `${pledge.donor.firstName} ${pledge.donor.lastName}`;
+  const showActions =
+    pledge.status === "PENDING" || pledge.status === "CONFIRMED";
+
+  return (
+    <div className="bg-white rounded-xl border border-border-subtle p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-border-default transition-colors">
+      <div className="flex items-start gap-4">
+        <Avatar src={pledge.donor.avatarUrl} name={donorName} size="md" />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-ink">{donorName}</p>
+            <Badge tone={statusToTone(pledge.status)} size="sm">
+              {pledge.status}
+            </Badge>
+            <span className="text-xs text-ink-subtle">
+              · {formatRelativeTime(pledge.createdAt)}
+            </span>
+          </div>
+
+          <p className="text-sm text-ink-soft mt-1">
+            Pledged{" "}
+            <span className="font-medium text-ink">
+              {pledge.quantityPledged} {pledge.foodNeed.unit}
+            </span>{" "}
+            of{" "}
+            <span className="text-ink-soft">{pledge.foodNeed.itemName}</span>
+            <span className="text-ink-subtle">
+              {" "}
+              for "{pledge.foodNeed.title}"
+            </span>
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-ink-subtle">
+            {pledge.dropOffDate && (
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Drop-off{" "}
+                {formatDate(pledge.dropOffDate)}
+              </span>
+            )}
+            {pledge.fulfilledAt && (
+              <span className="flex items-center gap-1 text-emerald-600">
+                <PackageCheck className="w-3 h-3" /> Fulfilled{" "}
+                {formatDate(pledge.fulfilledAt)}
+              </span>
+            )}
+          </div>
+
+          {pledge.notes && (
+            <p className="text-xs text-ink-soft mt-2 italic bg-surface-muted rounded-lg p-2.5">
+              "{pledge.notes}"
+            </p>
+          )}
+
+          {pledge.cancellationReason && (
+            <p className="text-xs text-red-600 mt-2">
+              Cancelled: {pledge.cancellationReason}
+            </p>
+          )}
+        </div>
+
+        {showActions && !cancelling && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {pledge.status === "PENDING" && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={onConfirm}
+                disabled={isConfirming}
+              >
+                <CheckCircle className="w-3.5 h-3.5" /> Confirm
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={onFulfil}
+              disabled={isFulfilling}
+            >
+              <PackageCheck className="w-3.5 h-3.5" /> Mark fulfilled
+            </Button>
+            <Button
+              size="sm"
+              variant="danger-ghost"
+              onClick={onStartCancel}
+            >
+              <XCircle className="w-3.5 h-3.5" /> Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {cancelling && (
+        <div className="mt-4 pt-4 border-t border-border-subtle flex items-end gap-2">
+          <TextField
+            containerClassName="flex-1"
+            label="Cancellation reason"
+            hint="Minimum 5 characters — donor will see this"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Why are you cancelling this pledge?"
+            autoFocus
+          />
+          <Button
+            size="md"
+            variant="danger"
+            onClick={onConfirmCancel}
+            disabled={cancelReason.trim().length < 5 || isCancelling}
+          >
+            {isCancelling ? "Cancelling..." : "Confirm cancel"}
+          </Button>
+          <Button size="md" variant="ghost" onClick={onCancelDismiss}>
+            Back
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Skeleton ----------
+
+function PledgeSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="bg-white rounded-xl border border-border-subtle p-5 animate-pulse"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-full bg-gray-100" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-100 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-2/3" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
 @theme {
+  /* Brand green — full scale */
+  --color-brand-green-50: #f0f9f4;
+  --color-brand-green-100: #d1ebde;
+  --color-brand-green-200: #a3d7bd;
+  --color-brand-green-300: #6dc196;
+  --color-brand-green-400: #2d9e64;
+  --color-brand-green-500: #1a7a4a;
+  --color-brand-green-600: #145e38;
+  --color-brand-green-700: #0d4527;
+
+  /* Brand legacy aliases — kept so existing components keep working */
   --color-brand-green: #1a7a4a;
   --color-brand-green-dk: #145e38;
   --color-brand-green-lt: #e8f5ee;
@@ -11,8 +22,43 @@
   --color-sidebar-active: #1a7a4a;
   --color-sidebar-accent: #4de69e;
 
-  /* Page surface */
+  /* Surfaces */
   --color-page: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f0f3f5;
+  --color-surface-elevated: #fbfcfd;
+
+  /* Borders */
+  --color-border-subtle: #f0f3f5;
+  --color-border-default: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* Ink (text) */
+  --color-ink: #0f172a;
+  --color-ink-soft: #1f2937;
+  --color-ink-muted: #6b7280;
+  --color-ink-subtle: #9ca3af;
+
+  /* Semantic state pairs */
+  --color-success-tint: #e8f5ee;
+  --color-success-ink: #145e38;
+  --color-warning-tint: #fef3c7;
+  --color-warning-ink: #92400e;
+  --color-danger-tint: #fee2e2;
+  --color-danger-ink: #991b1b;
+  --color-info-tint: #dbeafe;
+  --color-info-ink: #1e40af;
+
+  /* Focus ring */
+  --color-ring: rgba(26, 122, 74, 0.22);
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-pop: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -30,6 +76,8 @@ body {
 body {
   color: #1a1a1a;
   background: #f6f8fa;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -37,7 +85,8 @@ a {
   text-decoration: none;
 }
 
-/* Sidebar nav item hover handled via JS onMouseEnter to support rgba */
+/* Sidebar nav item — uses raw CSS so we can apply rgba colors that
+   Tailwind utilities don't handle cleanly. */
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -69,4 +118,22 @@ a {
   margin-top: 16px;
   margin-bottom: 4px;
   display: block;
+}
+
+/* Eyebrow label — small uppercase brand-green text used above page
+   headings and on auth screens. */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-brand-green-500);
+}
+
+/* Focus ring helper — opt-in via class. We don't override every
+   focus-visible globally because react-hook-form pages already style
+   their own focus states. */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-ring);
 }

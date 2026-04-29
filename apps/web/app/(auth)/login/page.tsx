@@ -2,9 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "@/lib/firebase";
 import { authApi } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { TextField, PasswordField } from "@/components/ui/FormField";
+import { Button } from "@/components/ui/Button";
+import {
+  BrandPanel,
+  MobileLogo,
+  GoogleSoonButton,
+  OrDivider,
+} from "@/components/auth/AuthShell";
+import { Mail } from "lucide-react";
+
+// Login — left column is the dark brand panel, right column is the form.
+// We keep the Google button visible so the placement is correct for when
+// the provider gets wired up — but until then it shows a "Coming soon"
+// pill and the click sets an error message. The brand panel gives the
+// page weight on wide screens and collapses to just a small logo on mobile.
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,8 +49,8 @@ export default function LoginPage() {
       } else {
         router.push("/admin");
       }
-    } catch (err: any) {
-      const code = err?.code ?? "";
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code ?? "";
       if (
         code === "auth/user-not-found" ||
         code === "auth/wrong-password" ||
@@ -55,68 +70,33 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Brand panel */}
-      <div
-        className="hidden lg:flex lg:w-[420px] flex-col justify-between p-10 flex-shrink-0"
-        style={{ background: "#0d1f17" }}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-            <span className="text-white text-sm font-bold">F</span>
-          </div>
-          <span className="text-white font-semibold text-sm">FoodShare</span>
-        </div>
-
-        {/* Tagline */}
-        <div>
-          <h2 className="text-2xl font-semibold text-white leading-snug mb-3">
-            Connecting food donors with the communities that need them most.
-          </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-            The management dashboard for NGOs and administrators running food donation programmes in Winnipeg.
-          </p>
-
-          <div className="mt-8 space-y-3">
-            {[
-              "Verified NGO organisations only",
-              "Real-time food pledge tracking",
-              "Secure, role-based access control",
-            ].map((point) => (
-              <div key={point} className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-green-mid flex-shrink-0" />
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  {point}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-          FoodShare — Winnipeg, Canada
-        </p>
-      </div>
+      <BrandPanel />
 
       {/* Form panel */}
       <div className="flex-1 flex items-center justify-center p-6 bg-page">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-              <span className="text-white text-sm font-bold">F</span>
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">FoodShare</span>
-          </div>
+          <MobileLogo />
 
           <div className="mb-7">
-            <h1 className="text-xl font-semibold text-gray-900">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-xl font-semibold text-ink">Welcome back</h1>
+            <p className="text-sm text-ink-soft mt-1">
               Sign in to your NGO or Admin dashboard
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm">
+          <div className="bg-white rounded-2xl border border-border-subtle p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <GoogleSoonButton
+              onClick={() =>
+                setError(
+                  "Google sign-in is coming soon. Please use email and password for now.",
+                )
+              }
+            />
+
+            <div className="my-5">
+              <OrDivider />
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-4">
               {error && (
                 <div className="bg-red-50 border border-red-100 text-red-700 text-xs rounded-lg px-3.5 py-3">
@@ -124,72 +104,41 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div>
-                <label htmlFor="email" className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@organisation.org"
-                  required
-                  className={cn(
-                    "w-full px-3.5 py-2.5 rounded-lg border text-sm",
-                    "border-gray-200 bg-gray-50 text-gray-900",
-                    "placeholder:text-gray-400",
-                    "focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent focus:bg-white",
-                    "transition-all duration-150",
-                  )}
-                />
-              </div>
+              <TextField
+                label="Email address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@organisation.org"
+                required
+                leftIcon={<Mail className="w-4 h-4" />}
+                autoComplete="email"
+              />
 
-              <div>
-                <label htmlFor="password" className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className={cn(
-                    "w-full px-3.5 py-2.5 rounded-lg border text-sm",
-                    "border-gray-200 bg-gray-50 text-gray-900",
-                    "placeholder:text-gray-400",
-                    "focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent focus:bg-white",
-                    "transition-all duration-150",
-                  )}
-                />
-              </div>
+              <PasswordField
+                label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                required
+                autoComplete="current-password"
+              />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={cn(
-                  "w-full py-2.5 px-4 rounded-lg text-sm font-medium mt-1",
-                  "bg-brand-green text-white",
-                  "hover:bg-brand-green-dk transition-colors duration-150",
-                  "focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2",
-                  "disabled:opacity-60 disabled:cursor-not-allowed",
-                )}
-              >
+              <Button type="submit" disabled={loading} fullWidth size="lg">
                 {loading ? "Signing in..." : "Sign in"}
-              </button>
+              </Button>
             </form>
           </div>
 
-          <p className="text-center text-xs text-gray-500 mt-5">
+          <p className="text-center text-xs text-ink-soft mt-5">
             New to FoodShare?{" "}
-            <a href="/register" className="text-brand-green hover:underline font-medium">
+            <Link href="/register" className="text-brand-green hover:underline font-medium">
               Create an account
-            </a>
+            </Link>
           </p>
         </div>
       </div>
     </div>
   );
 }
+

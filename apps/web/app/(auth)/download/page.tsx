@@ -1,41 +1,117 @@
 "use client";
 
 import Link from "next/link";
+import {
+  BrandPanel,
+  MobileLogo,
+} from "@/components/auth/AuthShell";
+import { Apple, Smartphone, Mail, CheckCircle2 } from "lucide-react";
+
+// Download — the screen donors land on after registering. The mobile
+// app isn't shipped yet, so the App Store and Google Play tiles are
+// disabled placeholders. We make this clear with a "launching soon"
+// pill and offer an email opt-in copy line so the page still feels
+// like progress, not a dead end.
 
 export default function DownloadPage() {
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-green mb-4">
-            <span className="text-white text-xl font-bold">F</span>
+    <div className="min-h-screen flex">
+      <BrandPanel
+        heading="The donor experience lives in the FoodShare app."
+        subheading="Make pledges, track your impact, and stay close to the charities you care about — all from your phone."
+        bullets={[
+          "Discover verified Winnipeg charities",
+          "Pledge non-perishable goods to specific needs",
+          "Track every donation in one place",
+        ]}
+      />
+
+      <div className="flex-1 flex items-center justify-center p-6 bg-page">
+        <div className="w-full max-w-sm">
+          <MobileLogo />
+
+          <div className="mb-7 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span className="text-xs font-medium text-emerald-700">
+                Account ready
+              </span>
+            </div>
+            <h1 className="text-xl font-semibold text-ink">Download FoodShare</h1>
+            <p className="text-sm text-ink-soft mt-1 leading-relaxed">
+              Your account is ready. Download the FoodShare mobile app to start
+              donating and pledging to Winnipeg charities.
+            </p>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Download FoodShare</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Your account is ready. Download the FoodShare mobile app to start donating and making food pledges to Winnipeg charities.
+
+          <div className="bg-white rounded-2xl border border-border-subtle p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-medium text-ink-soft">
+                Available soon on
+              </p>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
+                Launching soon
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <StoreTile
+                icon={<Apple className="w-5 h-5" />}
+                primary="Download on the"
+                secondary="App Store"
+              />
+              <StoreTile
+                icon={<Smartphone className="w-5 h-5" />}
+                primary="Get it on"
+                secondary="Google Play"
+              />
+            </div>
+
+            <div className="mt-5 pt-5 border-t border-border-subtle flex items-start gap-2.5">
+              <Mail className="w-4 h-4 text-ink-subtle mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-ink-subtle leading-relaxed">
+                We will email you the moment the app is live in your region. No
+                spam — only launch news.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center mt-6">
+            <Link
+              href="/login"
+              className="text-sm text-brand-green hover:underline font-medium"
+            >
+              Back to sign in
+            </Link>
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm space-y-4">
-          <p className="text-xs font-medium text-gray-500 text-center">Available soon on</p>
-          <div className="space-y-3">
-            <div className="w-full py-3 px-4 bg-gray-900 text-white rounded-xl text-sm font-medium opacity-40 cursor-not-allowed select-none text-center">
-              Download on the App Store
-            </div>
-            <div className="w-full py-3 px-4 bg-gray-900 text-white rounded-xl text-sm font-medium opacity-40 cursor-not-allowed select-none text-center">
-              Get it on Google Play
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
-            The FoodShare mobile app is launching soon in Winnipeg. We will notify you by email when it is available.
-          </p>
-        </div>
-
-        <p className="text-center mt-6">
-          <Link href="/login" className="text-sm text-brand-green hover:underline">
-            Back to sign in
-          </Link>
-        </p>
+function StoreTile({
+  icon,
+  primary,
+  secondary,
+}: {
+  icon: React.ReactNode;
+  primary: string;
+  secondary: string;
+}) {
+  return (
+    <div
+      className="w-full py-3 px-4 bg-ink rounded-xl text-white flex items-center gap-3 opacity-50 cursor-not-allowed select-none"
+      aria-disabled="true"
+    >
+      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+        {icon}
+      </div>
+      <div className="flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wide text-white/60">
+          {primary}
+        </span>
+        <span className="text-sm font-semibold">{secondary}</span>
       </div>
     </div>
   );

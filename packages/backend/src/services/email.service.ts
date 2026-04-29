@@ -3,7 +3,7 @@ import { env } from '../config/env';
 import logger from '../utils/logger';
 
 const resend = new Resend(env.resendApiKey);
-logger.info(`Resend initialized with key: ${env.resendApiKey.substring(0, 10)}... from: ${env.resendFromEmail}`);
+
 
 const FROM = env.resendFromEmail;
 const APP_NAME = 'FoodShare';
@@ -47,8 +47,7 @@ export class EmailService {
           </div>
         `,
       });
-      logger.info(`Resend result: ${JSON.stringify(result)}`);
-      logger.info(`Email sent successfully: NGO approved — ${to}, id: ${result.data?.id}`);
+      logger.info(`Email sent successfully: NGO approved — ${to}`);
     } catch (error) {
       logger.error('Failed to send NGO approved email', { error, to });
     }

@@ -2,10 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "@/lib/firebase";
 import { authApi } from "@/lib/api";
+import { TextField, PasswordField } from "@/components/ui/FormField";
+import {
+  PasswordStrength,
+  calculateStrength,
+} from "@/components/ui/PasswordStrength";
+import { Button } from "@/components/ui/Button";
+import {
+  BrandPanel,
+  MobileLogo,
+  GoogleSoonButton,
+  OrDivider,
+} from "@/components/auth/AuthShell";
+import { ArrowLeft, Building2, HeartHandshake, Mail, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+
+// Register — two-step flow. Step one picks a role (NGO or Donor) so the
+// second step can speak the right language ("organisation" vs "donor").
+// Donors get redirected to /download after registering since the donor
+// experience lives in the mobile app, not the dashboard.
 
 type Step = "role" | "details";
 
@@ -22,6 +40,8 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const strength = calculateStrength(form.password);
 
   const handleRoleSelect = (role: "ngo" | "donor") => {
     setSelectedRole(role);
@@ -45,6 +65,12 @@ export default function RegisterPage() {
       return;
     }
 
+    if (strength.level === "weak") {
+      setError("Please choose a stronger password — try a longer phrase or add numbers and symbols.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await authApi.register({
         email: form.email.toLowerCase().trim(),
@@ -61,11 +87,16 @@ export default function RegisterPage() {
       } else {
         router.push("/ngo");
       }
-    } catch (err: any) {
-      const code = err?.response?.data?.message ?? err?.code ?? "";
-      if (code.includes("already exists") || err?.code === "auth/email-already-in-use") {
+    } catch (err: unknown) {
+      const apiMessage = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message ?? "";
+      const code = (err as { code?: string })?.code ?? "";
+      if (
+        apiMessage.includes("already exists") ||
+        code === "auth/email-already-in-use"
+      ) {
         setError("An account with this email already exists. Please sign in instead.");
-      } else if (err?.code === "auth/invalid-password") {
+      } else if (code === "auth/invalid-password") {
         setError("Password must be at least 6 characters");
       } else {
         setError("Something went wrong. Please try again.");
@@ -74,127 +105,63 @@ export default function RegisterPage() {
     }
   };
 
-  const inputClass = cn(
-    "w-full px-3.5 py-2.5 rounded-lg border text-sm",
-    "border-gray-200 bg-gray-50 text-gray-900",
-    "placeholder:text-gray-400",
-    "focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent focus:bg-white",
-    "transition-all duration-150",
-  );
-
   return (
     <div className="min-h-screen flex">
-      {/* Brand panel */}
-      <div
-        className="hidden lg:flex lg:w-[420px] flex-col justify-between p-10 flex-shrink-0"
-        style={{ background: "#0d1f17" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-            <span className="text-white text-sm font-bold">F</span>
-          </div>
-          <span className="text-white font-semibold text-sm">FoodShare</span>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-semibold text-white leading-snug mb-3">
-            Join the FoodShare network in Winnipeg.
-          </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Create your account and start making a difference — whether you are an NGO receiving donations or a donor making pledges.
-          </p>
-
-          <div className="mt-8 space-y-3">
-            {[
-              "NGOs get a verified dashboard to manage needs",
-              "Donors use the FoodShare mobile app",
-              "Every pledge tracked, every donation counted",
-            ].map((point) => (
-              <div key={point} className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-green-mid flex-shrink-0" />
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  {point}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-          FoodShare — Winnipeg, Canada
-        </p>
-      </div>
+      <BrandPanel
+        heading="Join the FoodShare network in Winnipeg."
+        subheading="Create your account and start making a difference — whether you are an NGO receiving donations or a donor making pledges."
+        bullets={[
+          "NGOs get a verified dashboard to manage needs",
+          "Donors use the FoodShare mobile app",
+          "Every pledge tracked, every donation counted",
+        ]}
+      />
 
       {/* Form panel */}
       <div className="flex-1 flex items-center justify-center p-6 bg-page">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-              <span className="text-white text-sm font-bold">F</span>
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">FoodShare</span>
-          </div>
+          <MobileLogo />
 
           <div className="mb-7">
-            <h1 className="text-xl font-semibold text-gray-900">Create your account</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {step === "role" ? "Choose how you are joining FoodShare" : "Enter your account details"}
+            <h1 className="text-xl font-semibold text-ink">Create your account</h1>
+            <p className="text-sm text-ink-soft mt-1">
+              {step === "role"
+                ? "Choose how you are joining FoodShare"
+                : "Enter your account details"}
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm">
-            {/* Step 1 — Role selection */}
-            {step === "role" && (
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleRoleSelect("ngo")}
-                  className={cn(
-                    "w-full p-4 rounded-xl border-2 text-left transition-all duration-150",
-                    selectedRole === "ngo"
-                      ? "border-brand-green bg-brand-green-lt"
-                      : "border-gray-100 hover:border-brand-green hover:bg-brand-green-lt",
-                  )}
-                >
-                  <p className="text-sm font-semibold text-gray-900">NGO or Charity Representative</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                    Register your organisation to receive donations and food pledges
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => handleRoleSelect("donor")}
-                  className={cn(
-                    "w-full p-4 rounded-xl border-2 text-left transition-all duration-150",
-                    selectedRole === "donor"
-                      ? "border-brand-green bg-brand-green-lt"
-                      : "border-gray-100 hover:border-brand-green hover:bg-brand-green-lt",
-                  )}
-                >
-                  <p className="text-sm font-semibold text-gray-900">Donor</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                    Give cash donations or food pledges to verified charities
-                  </p>
-                </button>
-              </div>
-            )}
-
-            {/* Step 2 — Account details */}
-            {step === "details" && (
+          <div className="bg-white rounded-2xl border border-border-subtle p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            {step === "role" ? (
+              <RoleStep onSelect={handleRoleSelect} selectedRole={selectedRole} />
+            ) : (
               <form onSubmit={handleRegister} className="space-y-4">
                 <button
                   type="button"
                   onClick={() => setStep("role")}
-                  className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 mb-1"
+                  className="text-xs text-ink-subtle hover:text-ink-soft inline-flex items-center gap-1 -mt-1"
                 >
-                  ← Back
+                  <ArrowLeft className="w-3 h-3" /> Back
                 </button>
+
+                <GoogleSoonButton
+                  onClick={() =>
+                    setError(
+                      "Google sign-in is coming soon. Please use email and password for now.",
+                    )
+                  }
+                />
+
+                <OrDivider />
 
                 {selectedRole === "donor" && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <p className="text-xs text-blue-700 font-medium">Donors use the FoodShare mobile app</p>
+                    <p className="text-xs text-blue-700 font-medium">
+                      Donors use the FoodShare mobile app
+                    </p>
                     <p className="text-xs text-blue-600 mt-0.5">
-                      Create your account below and we will direct you to download the app.
+                      Create your account below — we will direct you to download the
+                      app right after.
                     </p>
                   </div>
                 )}
@@ -206,91 +173,165 @@ export default function RegisterPage() {
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">First name</label>
-                    <input
-                      type="text"
-                      value={form.firstName}
-                      onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-                      placeholder="Emmanuel"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Last name</label>
-                    <input
-                      type="text"
-                      value={form.lastName}
-                      onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-                      placeholder="Oyenuga"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Email address</label>
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder="you@example.com"
+                  <TextField
+                    label="First name"
+                    value={form.firstName}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, firstName: e.target.value }))
+                    }
+                    placeholder="Emmanuel"
                     required
-                    className={inputClass}
+                    autoComplete="given-name"
+                    leftIcon={<User className="w-4 h-4" />}
+                  />
+                  <TextField
+                    label="Last name"
+                    value={form.lastName}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, lastName: e.target.value }))
+                    }
+                    placeholder="Oyenuga"
+                    required
+                    autoComplete="family-name"
                   />
                 </div>
 
+                <TextField
+                  label="Email address"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, email: e.target.value }))
+                  }
+                  placeholder="you@example.com"
+                  required
+                  autoComplete="email"
+                  leftIcon={<Mail className="w-4 h-4" />}
+                />
+
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Password</label>
-                  <input
-                    type="password"
+                  <PasswordField
+                    label="Password"
                     value={form.password}
-                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, password: e.target.value }))
+                    }
                     placeholder="At least 6 characters"
                     required
-                    className={inputClass}
+                    autoComplete="new-password"
                   />
+                  <div className="mt-2">
+                    <PasswordStrength password={form.password} />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Confirm password</label>
-                  <input
-                    type="password"
-                    value={form.confirmPassword}
-                    onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                    placeholder="Repeat your password"
-                    required
-                    className={inputClass}
-                  />
-                </div>
+                <PasswordField
+                  label="Confirm password"
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, confirmPassword: e.target.value }))
+                  }
+                  placeholder="Repeat your password"
+                  required
+                  autoComplete="new-password"
+                  error={
+                    form.confirmPassword.length > 0 &&
+                    form.password !== form.confirmPassword
+                      ? "Passwords do not match"
+                      : undefined
+                  }
+                />
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={cn(
-                    "w-full py-2.5 px-4 rounded-lg text-sm font-medium mt-1",
-                    "bg-brand-green text-white",
-                    "hover:bg-brand-green-dk transition-colors duration-150",
-                    "focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2",
-                    "disabled:opacity-60 disabled:cursor-not-allowed",
-                  )}
-                >
+                <Button type="submit" disabled={loading} fullWidth size="lg">
                   {loading ? "Creating account..." : "Create Account"}
-                </button>
+                </Button>
               </form>
             )}
           </div>
 
-          <p className="text-center text-xs text-gray-500 mt-5">
+          <p className="text-center text-xs text-ink-soft mt-5">
             Already have an account?{" "}
-            <Link href="/login" className="text-brand-green hover:underline font-medium">
+            <Link
+              href="/login"
+              className="text-brand-green hover:underline font-medium"
+            >
               Sign in
             </Link>
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+// ---------- Step 1 (role picker) ----------
+
+function RoleStep({
+  onSelect,
+  selectedRole,
+}: {
+  onSelect: (role: "ngo" | "donor") => void;
+  selectedRole: "ngo" | "donor" | null;
+}) {
+  return (
+    <div className="space-y-3">
+      <RoleCard
+        icon={<Building2 className="w-5 h-5" />}
+        title="NGO or Charity Representative"
+        description="Register your organisation to receive donations and food pledges"
+        active={selectedRole === "ngo"}
+        onClick={() => onSelect("ngo")}
+      />
+      <RoleCard
+        icon={<HeartHandshake className="w-5 h-5" />}
+        title="Donor"
+        description="Give cash donations or food pledges to verified charities"
+        active={selectedRole === "donor"}
+        onClick={() => onSelect("donor")}
+      />
+    </div>
+  );
+}
+
+function RoleCard({
+  icon,
+  title,
+  description,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full p-4 rounded-xl border-2 text-left transition-all duration-150 flex items-start gap-3",
+        active
+          ? "border-brand-green bg-brand-green-lt"
+          : "border-border-subtle hover:border-brand-green hover:bg-brand-green-lt",
+      )}
+    >
+      <div
+        className={cn(
+          "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+          active
+            ? "bg-brand-green text-white"
+            : "bg-brand-green-lt text-brand-green",
+        )}
+      >
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-ink">{title}</p>
+        <p className="text-xs text-ink-soft mt-1 leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </button>
   );
 }

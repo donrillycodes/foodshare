@@ -498,7 +498,6 @@ export class NGOService {
     });
 
     // Send approval email after successful update
-    logger.info(`NGO manager data: ${JSON.stringify(ngo.manager)}`);
 
     if (ngo.manager?.email) {
       await emailService.sendNGOApproved(ngo.manager.email, ngo.name);

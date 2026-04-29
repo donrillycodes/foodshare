@@ -4,33 +4,118 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/shared/Header";
 import { ngoApi } from "@/lib/api";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import type { NGODashboard, NGOMember } from "@/types";
-import { Users, Plus, Trash2, X, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Trash2,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  ShieldCheck,
+  Clock,
+} from "lucide-react";
 import { NGOGuard } from "@/components/ngo/NGOGuard";
+import { Button } from "@/components/ui/Button";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  TextField,
+  SelectField,
+  CheckboxField,
+} from "@/components/ui/FormField";
 
-const PERMISSIONS = [
-  { key: "canPostNeeds", label: "Post Food Needs" },
-  { key: "canPostUpdates", label: "Post Updates" },
-  { key: "canManagePledges", label: "Manage Pledges" },
-  { key: "canViewDonations", label: "View Donations" },
-  { key: "canManageMembers", label: "Manage Members" },
-];
+// ---------- Permissions ----------
+
+type PermissionKey =
+  | "canPostNeeds"
+  | "canPostUpdates"
+  | "canManagePledges"
+  | "canViewDonations"
+  | "canManageMembers";
+
+const PERMISSIONS: { key: PermissionKey; label: string; description: string }[] =
+  [
+    {
+      key: "canPostNeeds",
+      label: "Post food needs",
+      description: "Create and edit pantry requests",
+    },
+    {
+      key: "canPostUpdates",
+      label: "Post updates",
+      description: "Publish news to the donor feed",
+    },
+    {
+      key: "canManagePledges",
+      label: "Manage pledges",
+      description: "Confirm, fulfil, or cancel donor pledges",
+    },
+    {
+      key: "canViewDonations",
+      label: "View donations",
+      description: "See cash donations to your NGO",
+    },
+    {
+      key: "canManageMembers",
+      label: "Manage members",
+      description: "Invite or remove team members",
+    },
+  ];
 
 type InviteForm = {
-  email: string; role: string; canPostNeeds: boolean; canPostUpdates: boolean;
-  canManagePledges: boolean; canViewDonations: boolean; canManageMembers: boolean;
+  email: string;
+  role: "MANAGER" | "STAFF";
+  canPostNeeds: boolean;
+  canPostUpdates: boolean;
+  canManagePledges: boolean;
+  canViewDonations: boolean;
+  canManageMembers: boolean;
 };
 
 const EMPTY_INVITE: InviteForm = {
-  email: "", role: "STAFF", canPostNeeds: false, canPostUpdates: false,
-  canManagePledges: false, canViewDonations: false, canManageMembers: false,
+  email: "",
+  role: "STAFF",
+  canPostNeeds: false,
+  canPostUpdates: false,
+  canManagePledges: false,
+  canViewDonations: false,
+  canManageMembers: false,
 };
 
-const MANAGER_DEFAULTS = { canPostNeeds: true, canPostUpdates: true, canManagePledges: true, canViewDonations: true, canManageMembers: false };
-const STAFF_DEFAULTS = { canPostNeeds: false, canPostUpdates: false, canManagePledges: false, canViewDonations: false, canManageMembers: false };
+const MANAGER_DEFAULTS: Record<PermissionKey, boolean> = {
+  canPostNeeds: true,
+  canPostUpdates: true,
+  canManagePledges: true,
+  canViewDonations: true,
+  canManageMembers: false,
+};
 
-const inputClass = "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent focus:bg-white transition-all";
+const STAFF_DEFAULTS: Record<PermissionKey, boolean> = {
+  canPostNeeds: false,
+  canPostUpdates: false,
+  canManagePledges: false,
+  canViewDonations: false,
+  canManageMembers: false,
+};
+
+const ROLE_TONE: Record<NGOMember["role"], BadgeTone> = {
+  OWNER: "brand",
+  MANAGER: "info",
+  STAFF: "muted",
+};
+
+function countPermissions(member: NGOMember): number {
+  return PERMISSIONS.reduce(
+    (acc, p) => acc + (member[p.key] ? 1 : 0),
+    0,
+  );
+}
+
+// ---------- Page ----------
 
 export default function NGOTeamPage() {
   const queryClient = useQueryClient();
@@ -58,6 +143,11 @@ export default function NGOTeamPage() {
     enabled: !!ngoId,
   });
 
+  const refreshMembers = () => {
+    queryClient.invalidateQueries({ queryKey: ["ngo-members"] });
+    queryClient.refetchQueries({ queryKey: ["ngo-members"] });
+  };
+
   const inviteMutation = useMutation({
     mutationFn: () =>
       ngoApi.inviteMember(ngoId!, {
@@ -72,8 +162,7 @@ export default function NGOTeamPage() {
         },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ngo-members"] });
-      queryClient.refetchQueries({ queryKey: ["ngo-members"] });
+      refreshMembers();
       setShowInviteForm(false);
       setInvite(EMPTY_INVITE);
     },
@@ -82,171 +171,482 @@ export default function NGOTeamPage() {
   const removeMutation = useMutation({
     mutationFn: (memberId: string) => ngoApi.removeMember(ngoId!, memberId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ngo-members"] });
-      queryClient.refetchQueries({ queryKey: ["ngo-members"] });
+      refreshMembers();
       setRemovingId(null);
     },
   });
 
   const handleRoleChange = (role: string) => {
-    const defaults = role === "MANAGER" ? MANAGER_DEFAULTS : STAFF_DEFAULTS;
-    setInvite((f) => ({ ...f, role, ...defaults }));
+    const r = role === "MANAGER" ? "MANAGER" : "STAFF";
+    const defaults = r === "MANAGER" ? MANAGER_DEFAULTS : STAFF_DEFAULTS;
+    setInvite((f) => ({ ...f, role: r, ...defaults }));
   };
 
-  const members = membersData ?? [];
+  const allMembers = membersData ?? [];
+  const activeMembers = allMembers.filter((m) => m.status === "ACTIVE");
+  const pendingMembers = allMembers.filter((m) => m.status === "PENDING");
 
   return (
     <NGOGuard>
       <div className="flex flex-col flex-1">
-        <Header title="Team" subtitle="Manage your NGO team members and their permissions" />
+        <Header
+          title="Team"
+          subtitle="Manage who can act on behalf of your NGO"
+        />
 
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-sm text-gray-500">
-              {members.length} team member{members.length !== 1 ? "s" : ""}
-            </p>
-            <button
-              onClick={() => setShowInviteForm(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-green text-white text-xs font-medium rounded-lg hover:bg-brand-green-dk transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Invite Member
-            </button>
-          </div>
-
-          {/* Invite form */}
-          {showInviteForm && (
-            <div className="bg-white rounded-xl border border-gray-100 p-5 mb-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">Invite Team Member</h3>
-                <button onClick={() => setShowInviteForm(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
+          <div className="max-w-5xl space-y-6">
+            {/* Top action bar */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-ink-soft">
+                  {activeMembers.length}{" "}
+                  {activeMembers.length === 1 ? "active member" : "active members"}
+                  {pendingMembers.length > 0 && (
+                    <span className="text-ink-subtle">
+                      {" "}
+                      · {pendingMembers.length} pending
+                    </span>
+                  )}
+                </p>
               </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Email address</label>
-                    <input type="email" value={invite.email} onChange={(e) => setInvite((f) => ({ ...f, email: e.target.value }))} placeholder="staff@yourorg.ca" className={inputClass} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Role</label>
-                    <select value={invite.role} onChange={(e) => handleRoleChange(e.target.value)} className={inputClass}>
-                      <option value="MANAGER">Manager</option>
-                      <option value="STAFF">Staff</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600 mb-2">
-                    Permissions <span className="text-gray-400 font-normal">— customise what this member can do</span>
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PERMISSIONS.map((perm) => (
-                      <label key={perm.key} className="flex items-center gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={invite[perm.key as keyof InviteForm] as boolean} onChange={(e) => setInvite((f) => ({ ...f, [perm.key]: e.target.checked }))} className="w-4 h-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                        <span className="text-sm text-gray-700">{perm.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => inviteMutation.mutate()} disabled={!invite.email || inviteMutation.isPending} className="px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green-dk disabled:opacity-50 transition-colors">
-                    {inviteMutation.isPending ? "Sending..." : "Send Invitation"}
-                  </button>
-                  <button onClick={() => setShowInviteForm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
-                </div>
-                {inviteMutation.isError && (
-                  <p className="text-xs text-red-600">Failed to send invitation. Make sure the user has a FoodShare account first.</p>
-                )}
-              </div>
+              {!showInviteForm && (
+                <Button onClick={() => setShowInviteForm(true)}>
+                  <Plus className="w-3.5 h-3.5" /> Invite member
+                </Button>
+              )}
             </div>
-          )}
 
-          {/* Members list */}
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
-                  <div className="h-4 bg-gray-100 rounded w-1/3" />
-                </div>
-              ))}
-            </div>
-          ) : members.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
-              <Users className="w-7 h-7 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No team members yet</p>
-              <p className="text-xs text-gray-400 mt-1">Invite staff members to help manage your NGO</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {members.map((member) => (
-                <div key={member.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-sm transition-shadow">
-                  <div
-                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => setExpandedId(expandedId === member.id ? null : member.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-brand-green-lt flex items-center justify-center flex-shrink-0">
-                        <span className="text-brand-green text-xs font-semibold">
-                          {member.user.firstName.charAt(0)}{member.user.lastName.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{member.user.firstName} {member.user.lastName}</p>
-                        <p className="text-xs text-gray-400">{member.user.email}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={cn(
-                            "text-xs px-2 py-0.5 rounded-full font-medium",
-                            member.role === "OWNER" ? "bg-brand-green-lt text-brand-green" :
-                            member.role === "MANAGER" ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-600"
-                          )}>
-                            {member.role}
-                          </span>
-                          {member.joinedAt && (
-                            <span className="text-xs text-gray-400">Joined {formatDate(member.joinedAt)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {member.role !== "OWNER" && (
-                        removingId === member.id ? (
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <p className="text-xs text-gray-600">Remove member?</p>
-                            <button onClick={() => removeMutation.mutate(member.id)} disabled={removeMutation.isPending} className="text-xs px-2.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors">Confirm</button>
-                            <button onClick={() => setRemovingId(null)} className="text-xs px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
-                          </div>
-                        ) : (
-                          <button onClick={(e) => { e.stopPropagation(); setRemovingId(member.id); }} className="text-gray-300 hover:text-red-500 transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )
-                      )}
-                      {expandedId === member.id ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                    </div>
-                  </div>
-                  {expandedId === member.id && (
-                    <div className="border-t border-gray-100 px-4 py-4 bg-gray-50">
-                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Permissions</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {PERMISSIONS.map((perm) => (
-                          <div key={perm.key} className="flex items-center gap-2">
-                            <div className={cn("w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0", member[perm.key as keyof NGOMember] ? "bg-brand-green" : "bg-gray-200")}>
-                              {member[perm.key as keyof NGOMember] && <span className="text-white" style={{ fontSize: "9px" }}>✓</span>}
-                            </div>
-                            <span className={cn("text-xs", member[perm.key as keyof NGOMember] ? "text-gray-700" : "text-gray-400")}>{perm.label}</span>
-                          </div>
-                        ))}
-                      </div>
+            {/* Invite composer */}
+            {showInviteForm && (
+              <InviteComposer
+                invite={invite}
+                setInvite={setInvite}
+                onRoleChange={handleRoleChange}
+                onSubmit={() => inviteMutation.mutate()}
+                onCancel={() => {
+                  setShowInviteForm(false);
+                  setInvite(EMPTY_INVITE);
+                }}
+                isPending={inviteMutation.isPending}
+                isError={inviteMutation.isError}
+              />
+            )}
+
+            {/* Lists */}
+            {isLoading ? (
+              <MemberSkeleton />
+            ) : allMembers.length === 0 ? (
+              <EmptyState
+                icon={<Users className="w-5 h-5" />}
+                title="No team members yet"
+                description="Invite staff to help manage your NGO. They'll need a FoodShare account first."
+                action={
+                  <Button onClick={() => setShowInviteForm(true)}>
+                    <Plus className="w-3.5 h-3.5" /> Invite your first member
+                  </Button>
+                }
+              />
+            ) : (
+              <>
+                {/* Active members */}
+                <section className="space-y-3">
+                  <SectionHeader
+                    icon={<ShieldCheck className="w-3.5 h-3.5" />}
+                    label="Active"
+                    count={activeMembers.length}
+                  />
+                  {activeMembers.length === 0 ? (
+                    <p className="text-xs text-ink-subtle px-1">
+                      No active members yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeMembers.map((member) => (
+                        <MemberRow
+                          key={member.id}
+                          member={member}
+                          expanded={expandedId === member.id}
+                          onToggle={() =>
+                            setExpandedId(
+                              expandedId === member.id ? null : member.id,
+                            )
+                          }
+                          removing={removingId === member.id}
+                          onStartRemove={() => setRemovingId(member.id)}
+                          onCancelRemove={() => setRemovingId(null)}
+                          onConfirmRemove={() =>
+                            removeMutation.mutate(member.id)
+                          }
+                          isRemoving={removeMutation.isPending}
+                        />
+                      ))}
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
-          )}
+                </section>
+
+                {/* Pending invitations */}
+                {pendingMembers.length > 0 && (
+                  <section className="space-y-3">
+                    <SectionHeader
+                      icon={<Clock className="w-3.5 h-3.5" />}
+                      label="Pending invitations"
+                      count={pendingMembers.length}
+                    />
+                    <div className="space-y-3">
+                      {pendingMembers.map((member) => (
+                        <MemberRow
+                          key={member.id}
+                          member={member}
+                          expanded={expandedId === member.id}
+                          onToggle={() =>
+                            setExpandedId(
+                              expandedId === member.id ? null : member.id,
+                            )
+                          }
+                          removing={removingId === member.id}
+                          onStartRemove={() => setRemovingId(member.id)}
+                          onCancelRemove={() => setRemovingId(null)}
+                          onConfirmRemove={() =>
+                            removeMutation.mutate(member.id)
+                          }
+                          isRemoving={removeMutation.isPending}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </NGOGuard>
+  );
+}
+
+// ---------- Section header ----------
+
+function SectionHeader({
+  icon,
+  label,
+  count,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+}) {
+  return (
+    <div className="flex items-center gap-2 px-1">
+      <span className="text-ink-subtle">{icon}</span>
+      <h3 className="text-xs font-semibold text-ink-soft uppercase tracking-wide">
+        {label}
+      </h3>
+      <span className="text-xs text-ink-subtle">· {count}</span>
+    </div>
+  );
+}
+
+// ---------- Invite composer ----------
+
+interface InviteComposerProps {
+  invite: InviteForm;
+  setInvite: React.Dispatch<React.SetStateAction<InviteForm>>;
+  onRoleChange: (role: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+  isError: boolean;
+}
+
+function InviteComposer({
+  invite,
+  setInvite,
+  onRoleChange,
+  onSubmit,
+  onCancel,
+  isPending,
+  isError,
+}: InviteComposerProps) {
+  const emailValid = /\S+@\S+\.\S+/.test(invite.email);
+
+  return (
+    <div className="bg-white rounded-xl border border-border-subtle shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-brand-green-lt flex items-center justify-center">
+            <Mail className="w-3.5 h-3.5 text-brand-green" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">
+              Invite a team member
+            </p>
+            <p className="text-xs text-ink-subtle">
+              They must already have a FoodShare account
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onCancel}
+          className="text-ink-subtle hover:text-ink-soft transition-colors p-1 rounded-md hover:bg-surface-muted"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="p-5 space-y-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <TextField
+            label="Email address"
+            required
+            type="email"
+            value={invite.email}
+            onChange={(e) =>
+              setInvite((f) => ({ ...f, email: e.target.value }))
+            }
+            placeholder="staff@yourorg.ca"
+          />
+          <SelectField
+            label="Role"
+            required
+            value={invite.role}
+            onChange={(e) => onRoleChange(e.target.value)}
+            options={[
+              { value: "MANAGER", label: "Manager" },
+              { value: "STAFF", label: "Staff" },
+            ]}
+            hint={
+              invite.role === "MANAGER"
+                ? "Manager defaults: post needs, post updates, manage pledges, view donations"
+                : "Staff defaults: no permissions — toggle individually below"
+            }
+          />
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-ink-soft mb-1">Permissions</p>
+          <p className="text-xs text-ink-subtle mb-3">
+            Choose what this member can do. You can change these later.
+          </p>
+          <div className="grid md:grid-cols-2 gap-3 bg-surface-muted rounded-lg p-4">
+            {PERMISSIONS.map((perm) => (
+              <CheckboxField
+                key={perm.key}
+                name={perm.key}
+                label={perm.label}
+                description={perm.description}
+                checked={invite[perm.key]}
+                onChange={(e) =>
+                  setInvite((f) => ({ ...f, [perm.key]: e.target.checked }))
+                }
+              />
+            ))}
+          </div>
+        </div>
+
+        {isError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            Failed to send invitation. Make sure the user has a FoodShare
+            account first.
+          </p>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onSubmit}
+            disabled={!emailValid || isPending}
+            size="lg"
+          >
+            {isPending ? "Sending…" : "Send invitation"}
+          </Button>
+          <Button variant="ghost" size="lg" onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Member row ----------
+
+interface MemberRowProps {
+  member: NGOMember;
+  expanded: boolean;
+  onToggle: () => void;
+  removing: boolean;
+  onStartRemove: () => void;
+  onCancelRemove: () => void;
+  onConfirmRemove: () => void;
+  isRemoving: boolean;
+}
+
+function MemberRow({
+  member,
+  expanded,
+  onToggle,
+  removing,
+  onStartRemove,
+  onCancelRemove,
+  onConfirmRemove,
+  isRemoving,
+}: MemberRowProps) {
+  const fullName = `${member.user.firstName} ${member.user.lastName}`;
+  const permCount = countPermissions(member);
+  const isOwner = member.role === "OWNER";
+  const isPending = member.status === "PENDING";
+
+  return (
+    <div className="bg-white rounded-xl border border-border-subtle overflow-hidden hover:border-border-default transition-colors shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div
+        onClick={onToggle}
+        className="px-5 py-4 flex items-center gap-4 cursor-pointer hover:bg-surface-muted/50 transition-colors"
+      >
+        <Avatar src={member.user.avatarUrl} name={fullName} size="md" />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-ink">{fullName}</p>
+            <Badge tone={ROLE_TONE[member.role]} size="sm">
+              {member.role}
+            </Badge>
+            {isPending && (
+              <Badge tone="warning" size="sm" dot>
+                Invitation pending
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-ink-subtle mt-0.5 truncate">
+            {member.user.email}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-ink-subtle">
+            <span>
+              {permCount === 0
+                ? "No permissions"
+                : `${permCount} of ${PERMISSIONS.length} permissions`}
+            </span>
+            {member.joinedAt && !isPending && (
+              <span>· Joined {formatDate(member.joinedAt)}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {!isOwner && !removing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartRemove();
+              }}
+              className="text-ink-subtle hover:text-red-500 transition-colors p-1.5 rounded-md hover:bg-red-50"
+              aria-label="Remove member"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            className="text-ink-subtle p-1"
+            aria-label={expanded ? "Collapse" : "Expand"}
+          >
+            {expanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Inline remove confirmation */}
+      {removing && (
+        <div className="px-5 py-3 bg-red-50/60 border-t border-red-100 flex items-center justify-between gap-3">
+          <p className="text-xs text-red-700">
+            Remove <span className="font-medium">{fullName}</span> from your
+            team? They'll lose access immediately.
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={onConfirmRemove}
+              disabled={isRemoving}
+            >
+              {isRemoving ? "Removing…" : "Remove"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onCancelRemove}>
+              Keep
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Permissions detail */}
+      {expanded && (
+        <div className="px-5 py-4 bg-surface-muted border-t border-border-subtle">
+          <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-3">
+            Permissions
+          </p>
+          <div className="grid md:grid-cols-2 gap-2">
+            {PERMISSIONS.map((perm) => {
+              const granted = member[perm.key];
+              return (
+                <div
+                  key={perm.key}
+                  className="flex items-start gap-2.5 py-1"
+                >
+                  <span
+                    className={
+                      granted
+                        ? "mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-green text-white text-[10px] font-bold leading-none"
+                        : "mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold leading-none"
+                    }
+                  >
+                    {granted ? "✓" : "·"}
+                  </span>
+                  <div className="flex flex-col">
+                    <span
+                      className={
+                        granted
+                          ? "text-xs text-ink"
+                          : "text-xs text-ink-subtle line-through"
+                      }
+                    >
+                      {perm.label}
+                    </span>
+                    <span className="text-[11px] text-ink-subtle">
+                      {perm.description}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Skeleton ----------
+
+function MemberSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="bg-white rounded-xl border border-border-subtle p-5 animate-pulse"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-full bg-gray-100" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-100 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-1/2" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
