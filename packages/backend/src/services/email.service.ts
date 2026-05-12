@@ -4,30 +4,30 @@ import logger from '../utils/logger';
 
 const resend = new Resend(env.resendApiKey);
 
-
 const FROM = env.resendFromEmail;
-const APP_NAME = 'FoodShare';
+const APP_NAME = 'GivHive';
 const DASHBOARD_URL = env.clientUrl;
 
 export class EmailService {
-
   // ── NGO Approved ───────────────────────────────────────────────────────────
   async sendNGOApproved(to: string, ngoName: string) {
     try {
-      logger.info(`Attempting to send NGO approved email to: ${to} for NGO: ${ngoName}`);
+      logger.info(
+        `Attempting to send NGO approved email to: ${to} for NGO: ${ngoName}`
+      );
       const result = await resend.emails.send({
         from: FROM,
         to,
-        subject: `🎉 ${ngoName} is now live on FoodShare`,
+        subject: `🎉 ${ngoName} is now live on GivHive`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">Your NGO is approved! 🎉</h2>
               <p style="color: #4A4A4A; line-height: 1.6;">
-                Great news — <strong>${ngoName}</strong> has been verified and is now live on the FoodShare platform.
+                Great news — <strong>${ngoName}</strong> has been verified and is now live on the GivHive platform.
                 Donors can now find your organisation, make cash donations, and pledge food items to your needs.
               </p>
               <a href="${DASHBOARD_URL}/ngo" 
@@ -42,7 +42,7 @@ export class EmailService {
                 <br>• Invite your team members
               </p>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -59,16 +59,16 @@ export class EmailService {
       await resend.emails.send({
         from: FROM,
         to,
-        subject: `Update on your FoodShare application — ${ngoName}`,
+        subject: `Update on your GivHive application — ${ngoName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">Application update for ${ngoName}</h2>
               <p style="color: #4A4A4A; line-height: 1.6;">
-                Thank you for applying to join FoodShare. After reviewing your application, 
+                Thank you for applying to join GivHive. After reviewing your application, 
                 we were unable to approve it at this time.
               </p>
               <div style="background: #FEF2F2; border-left: 4px solid #DC2626; padding: 16px; border-radius: 4px; margin: 16px 0;">
@@ -84,7 +84,7 @@ export class EmailService {
                 Update and resubmit →
               </a>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -101,33 +101,33 @@ export class EmailService {
       await resend.emails.send({
         from: FROM,
         to,
-        subject: `You have been invited to join ${ngoName} on FoodShare`,
+        subject: `You have been invited to join ${ngoName} on GivHive`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">You have been invited!</h2>
               <p style="color: #4A4A4A; line-height: 1.6;">
                 <strong>${inviterName}</strong> has invited you to join <strong>${ngoName}</strong> 
-                as a team member on FoodShare.
+                as a team member on GivHive.
               </p>
               <p style="color: #4A4A4A; line-height: 1.6;">
-                Sign in to your FoodShare account to accept the invitation and start managing 
+                Sign in to your GivHive account to accept the invitation and start managing 
                 food needs, pledges, and updates for ${ngoName}.
               </p>
               <a href="${DASHBOARD_URL}/login" 
                 style="display: inline-block; background: #1A7A4A; color: white; padding: 12px 24px; 
                 border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-                Sign in to FoodShare →
+                Sign in to GivHive →
               </a>
               <p style="color: #9CA3AF; font-size: 13px;">
                 Don't have an account yet? 
                 <a href="${DASHBOARD_URL}/register" style="color: #1A7A4A;">Create one here</a>
               </p>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -144,25 +144,25 @@ export class EmailService {
       await resend.emails.send({
         from: FROM,
         to,
-        subject: `You have been invited to join the FoodShare admin team`,
+        subject: `You have been invited to join the GivHive admin team`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
-              <h2 style="color: #1A1A1A;">Welcome to the FoodShare admin team</h2>
+              <h2 style="color: #1A1A1A;">Welcome to the GivHive admin team</h2>
               <p style="color: #4A4A4A; line-height: 1.6;">
-                <strong>${inviterName}</strong> has invited you to join the FoodShare admin team.
+                <strong>${inviterName}</strong> has invited you to join the GivHive admin team.
                 You will have access to the admin dashboard to help manage the platform.
               </p>
               <a href="${DASHBOARD_URL}/login" 
                 style="display: inline-block; background: #1A7A4A; color: white; padding: 12px 24px; 
                 border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-                Sign in to FoodShare →
+                Sign in to GivHive →
               </a>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -189,7 +189,7 @@ export class EmailService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">Thank you, ${donorName}! ❤️</h2>
@@ -205,10 +205,10 @@ export class EmailService {
               </div>
               <p style="color: #4A4A4A; line-height: 1.6;">
                 Your generosity makes a real difference in the Winnipeg community. 
-                Thank you for choosing to give through FoodShare.
+                Thank you for choosing to give through GivHive.
               </p>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -236,7 +236,7 @@ export class EmailService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">Pledge confirmed! 📦</h2>
@@ -255,7 +255,7 @@ export class EmailService {
                 The NGO team will mark your pledge as fulfilled once they receive the items.
               </p>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
@@ -283,7 +283,7 @@ export class EmailService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">FoodShare</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
             </div>
             <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
               <h2 style="color: #1A1A1A;">Pledge fulfilled! 🌱</h2>
@@ -303,7 +303,7 @@ export class EmailService {
                 in the Winnipeg community.
               </p>
               <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
-              <p style="color: #9CA3AF; font-size: 12px;">FoodShare — Winnipeg, Canada</p>
+              <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
             </div>
           </div>
         `,
