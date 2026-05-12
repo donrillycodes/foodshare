@@ -26,6 +26,8 @@ app.use(
         'http://localhost:3000', // Next.js dashboard
         'http://localhost:8081', // Expo mobile app
         'https://foodshare-web-fawn.vercel.app',
+        'https://givhive.com',
+        'https://www.givhive.com',
       ];
 
       // Allow requests with no origin — mobile apps and Postman
