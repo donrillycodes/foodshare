@@ -184,7 +184,7 @@ export default function AdminTeamPage() {
       <div className="flex flex-col flex-1">
         <Header
           title="Admin team"
-          subtitle="Manage who can act as a FoodShare admin"
+          subtitle="Manage who can act as a GivHive admin"
         />
 
         <div className="flex-1 p-6 overflow-y-auto">
@@ -230,7 +230,7 @@ export default function AdminTeamPage() {
               <EmptyState
                 icon={<Users className="w-5 h-5" />}
                 title="No admin team members yet"
-                description="Invite teammates to help operate FoodShare. They'll need a FoodShare account first."
+                description="Invite teammates to help operate GivHive. They'll need a GivHive account first."
                 action={
                   <Button onClick={() => setShowInviteForm(true)}>
                     <Plus className="w-3.5 h-3.5" /> Invite your first admin
@@ -369,7 +369,7 @@ function InviteComposer({
           <div>
             <p className="text-sm font-semibold text-ink">Invite an admin</p>
             <p className="text-xs text-ink-subtle">
-              They must already have a FoodShare account
+              They must already have a GivHive account
             </p>
           </div>
         </div>
@@ -392,7 +392,7 @@ function InviteComposer({
             onChange={(e) =>
               setInvite((f) => ({ ...f, email: e.target.value }))
             }
-            placeholder="admin@foodshare.ca"
+            placeholder="admin@givhive.ca"
           />
           <SelectField
             label="Department"
@@ -441,8 +441,8 @@ function InviteComposer({
 
         {isError && (
           <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-            Failed to send invitation. Make sure the user has a FoodShare
-            account first.
+            Failed to send invitation. Make sure the user has a GivHive account
+            first.
           </p>
         )}
 

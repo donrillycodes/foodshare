@@ -119,7 +119,7 @@ export default function RegisterScreen() {
             </View>
             <Text style={styles.title}>Create account</Text>
             <Text style={styles.subtitle}>
-              Join FoodShare and start making a difference
+              Join GivHive and start making a difference
             </Text>
           </View>
 

@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
       <div className="flex flex-col flex-1">
         <Header
           title="Platform analytics"
-          subtitle="A look at how FoodShare is performing"
+          subtitle="A look at how GivHive is performing"
         />
 
         <div className="flex-1 p-6 overflow-y-auto">
@@ -88,7 +88,7 @@ export default function AnalyticsPage() {
                     <StatCard
                       label="Approved"
                       value={data.ngos.approved.toLocaleString()}
-                      meta="Live on FoodShare"
+                      meta="Live on GivHive"
                       icon={<CheckCircle className="w-4 h-4" />}
                     />
                     <StatCard
@@ -99,9 +99,7 @@ export default function AnalyticsPage() {
                           ? "Awaiting your approval"
                           : "Caught up"
                       }
-                      trend={
-                        data.ngos.pendingReview > 0 ? "down" : "neutral"
-                      }
+                      trend={data.ngos.pendingReview > 0 ? "down" : "neutral"}
                       icon={<AlertTriangle className="w-4 h-4" />}
                       iconClassName="bg-amber-50 text-amber-600"
                     />
@@ -116,9 +114,7 @@ export default function AnalyticsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <StatCard
                       label="All-time total"
-                      value={formatCurrency(
-                        Number(data.donations.totalAmount),
-                      )}
+                      value={formatCurrency(Number(data.donations.totalAmount))}
                       meta={`${data.donations.totalCount.toLocaleString()} transactions`}
                       icon={<Heart className="w-4 h-4" />}
                     />

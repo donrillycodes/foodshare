@@ -27,7 +27,7 @@ export default function WrongRoleScreen() {
         <Text style={styles.title}>Wrong app</Text>
         <Text style={styles.message}>
           This app is for donors only. NGO managers and admins should use the
-          FoodShare web dashboard at dashboard.foodshare.ca
+          GivHive web dashboard at dashboard.givhive.ca
         </Text>
         <TouchableOpacity
           style={styles.button}

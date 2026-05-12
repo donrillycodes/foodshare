@@ -22,9 +22,7 @@ export default function SupportScreen() {
       <View style={styles.content}>
         <Text style={styles.emoji}>❓</Text>
         <Text style={styles.message}>Support centre coming soon</Text>
-        <Text style={styles.sub}>
-          For urgent issues email hello@foodshare.ca
-        </Text>
+        <Text style={styles.sub}>For urgent issues email hello@givhive.ca</Text>
       </View>
     </SafeAreaView>
   );

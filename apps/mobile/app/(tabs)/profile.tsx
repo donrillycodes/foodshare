@@ -10,7 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS, getInitials } from "../../lib/utils";
-import { useNavigationStore } from '../../store/authStore';
+import { useNavigationStore } from "../../store/authStore";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -33,21 +33,21 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
-  emoji: '❤️',
-  label: 'My Donations',
-  onPress: () => {
-    setActivityTab('donations');
-    router.push('/(tabs)/activity');
-  },
-},
-{
-  emoji: '📦',
-  label: 'My Pledges',
-  onPress: () => {
-    setActivityTab('pledges');
-    router.push('/(tabs)/activity');
-  },
-},
+      emoji: "❤️",
+      label: "My Donations",
+      onPress: () => {
+        setActivityTab("donations");
+        router.push("/(tabs)/activity");
+      },
+    },
+    {
+      emoji: "📦",
+      label: "My Pledges",
+      onPress: () => {
+        setActivityTab("pledges");
+        router.push("/(tabs)/activity");
+      },
+    },
 
     {
       emoji: "🔔",
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={styles.version}>FoodShare v1.0.0</Text>
+        <Text style={styles.version}>GivHive v1.0.0</Text>
 
         <View style={styles.bottomPadding} />
       </ScrollView>

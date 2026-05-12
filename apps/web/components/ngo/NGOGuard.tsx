@@ -76,7 +76,7 @@ export function NGOGuard({ children }: NGOGuardProps) {
       <LockedState
         icon={<XCircle className="w-6 h-6 text-gray-400" />}
         title="NGO suspended"
-        message="Your NGO has been suspended. Please contact FoodShare support for assistance."
+        message="Your NGO has been suspended. Please contact GivHive support for assistance."
         color="gray"
       />
     );
@@ -94,7 +94,14 @@ interface LockedStateProps {
   color?: "amber" | "red" | "gray";
 }
 
-function LockedState({ icon, title, message, actionLabel, actionHref, color = "amber" }: LockedStateProps) {
+function LockedState({
+  icon,
+  title,
+  message,
+  actionLabel,
+  actionHref,
+  color = "amber",
+}: LockedStateProps) {
   const bgMap = {
     amber: "bg-amber-50 border-amber-100",
     red: "bg-red-50 border-red-100",
@@ -103,7 +110,9 @@ function LockedState({ icon, title, message, actionLabel, actionHref, color = "a
 
   return (
     <div className="flex-1 flex items-center justify-center p-8">
-      <div className={`max-w-sm w-full rounded-2xl border p-10 text-center shadow-sm ${bgMap[color]}`}>
+      <div
+        className={`max-w-sm w-full rounded-2xl border p-10 text-center shadow-sm ${bgMap[color]}`}
+      >
         <div className="flex justify-center mb-4">{icon}</div>
         <h2 className="text-base font-semibold text-gray-900 mb-2">{title}</h2>
         <p className="text-sm text-gray-600 mb-6 leading-relaxed">{message}</p>

@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  BrandPanel,
-  MobileLogo,
-} from "@/components/auth/AuthShell";
+import { BrandPanel, MobileLogo } from "@/components/auth/AuthShell";
 import { Apple, Smartphone, Mail, CheckCircle2 } from "lucide-react";
 
 // Download — the screen donors land on after registering. The mobile
@@ -17,7 +14,7 @@ export default function DownloadPage() {
   return (
     <div className="min-h-screen flex">
       <BrandPanel
-        heading="The donor experience lives in the FoodShare app."
+        heading="The donor experience lives in the GivHive app."
         subheading="Make pledges, track your impact, and stay close to the charities you care about — all from your phone."
         bullets={[
           "Discover verified Winnipeg charities",
@@ -37,9 +34,9 @@ export default function DownloadPage() {
                 Account ready
               </span>
             </div>
-            <h1 className="text-xl font-semibold text-ink">Download FoodShare</h1>
+            <h1 className="text-xl font-semibold text-ink">Download GivHive</h1>
             <p className="text-sm text-ink-soft mt-1 leading-relaxed">
-              Your account is ready. Download the FoodShare mobile app to start
+              Your account is ready. Download the GivHive mobile app to start
               donating and pledging to Winnipeg charities.
             </p>
           </div>

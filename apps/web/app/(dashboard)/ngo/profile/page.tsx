@@ -135,10 +135,7 @@ export default function NGOProfilePage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Header
-        title="NGO Profile"
-        subtitle="Manage your organisation details"
-      />
+      <Header title="NGO Profile" subtitle="Manage your organisation details" />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl">
@@ -148,7 +145,7 @@ export default function NGOProfilePage() {
             <EmptyState
               icon={<Building2 className="w-5 h-5" />}
               title="Register your NGO"
-              description="Submit your organisation details for review. Once approved, your NGO will be listed on the FoodShare platform."
+              description="Submit your organisation details for review. Once approved, your NGO will be listed on the GivHive platform."
               action={
                 <Button
                   onClick={() => {
@@ -166,9 +163,7 @@ export default function NGOProfilePage() {
               form={form}
               updateField={updateField}
               isRegistering={isRegistering}
-              isPending={
-                registerMutation.isPending || updateMutation.isPending
-              }
+              isPending={registerMutation.isPending || updateMutation.isPending}
               isError={registerMutation.isError}
               onCancel={() => {
                 setIsRegistering(false);
@@ -253,7 +248,12 @@ function ProfileHero({
             </p>
           )}
         </div>
-        <Button variant="secondary" size="sm" onClick={onEdit} className="mt-10">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onEdit}
+          className="mt-10"
+        >
           <Pencil className="w-3.5 h-3.5" /> Edit
         </Button>
       </div>
@@ -294,11 +294,7 @@ function ApplicationStatus({
 
       {isRejected && ngo.resubmissionCount < 3 && (
         <div className="flex items-center gap-3">
-          <Button
-            onClick={onResubmit}
-            disabled={isResubmitting}
-            size="sm"
-          >
+          <Button onClick={onResubmit} disabled={isResubmitting} size="sm">
             {isResubmitting ? "Resubmitting..." : "Resubmit application"}
           </Button>
           <span className="text-xs text-ink-subtle">
@@ -530,7 +526,7 @@ function ProfileForm({
 
       {isRegistering && (
         <p className="text-xs text-ink-subtle mt-4 leading-relaxed">
-          Once submitted, your application will be reviewed by FoodShare admins
+          Once submitted, your application will be reviewed by GivHive admins
           within 1–2 business days. You can resubmit up to 3 times if changes
           are requested.{" "}
           <Link href="/login" className="text-brand-green hover:underline">

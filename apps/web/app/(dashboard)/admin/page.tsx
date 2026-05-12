@@ -6,11 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/shared/Header";
 import { adminApi } from "@/lib/api";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
-import type {
-  PlatformAnalytics,
-  AuditLog,
-  PaginatedResponse,
-} from "@/types";
+import type { PlatformAnalytics, AuditLog, PaginatedResponse } from "@/types";
 import {
   Users,
   Building2,
@@ -69,7 +65,7 @@ export default function AdminDashboard() {
     <div className="flex flex-col flex-1">
       <Header
         title={`Hello, ${user?.firstName ?? ""} 👋`}
-        subtitle="Here is what is happening on FoodShare today"
+        subtitle="Here is what is happening on GivHive today"
       />
 
       <div className="flex-1 p-6 overflow-y-auto">

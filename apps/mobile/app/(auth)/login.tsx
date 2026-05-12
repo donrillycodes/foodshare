@@ -10,10 +10,10 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signIn, sendPasswordReset } from '../../lib/firebase';
+import { signIn, sendPasswordReset } from "../../lib/firebase";
 import { authApi } from "../../lib/api";
 import { useAuthStore } from "../../store/authStore";
 import { COLORS } from "../../lib/utils";
@@ -51,7 +51,7 @@ export default function LoginScreen() {
       // Step 4 — Block NGO and Admin users
       if (user.role !== "DONOR") {
         setError(
-          "This app is for donors only. Please use the FoodShare web dashboard.",
+          "This app is for donors only. Please use the GivHive web dashboard.",
         );
         setLoading(false);
         return;
@@ -79,24 +79,27 @@ export default function LoginScreen() {
   };
 
   const handleForgotPassword = async () => {
-  if (!email) {
-    Alert.alert(
-      'Enter your email',
-      'Please enter your email address first then tap Forgot Password.'
-    );
-    return;
-  }
-  try {
-    await sendPasswordReset(email.trim().toLowerCase());
-    Alert.alert(
-      'Email sent ✉️',
-      'Check your inbox for a password reset link.',
-      [{ text: 'OK' }]
-    );
-  } catch (err) {
-    Alert.alert('Failed', 'Could not send reset email. Please check your email address.');
-  }
-};
+    if (!email) {
+      Alert.alert(
+        "Enter your email",
+        "Please enter your email address first then tap Forgot Password.",
+      );
+      return;
+    }
+    try {
+      await sendPasswordReset(email.trim().toLowerCase());
+      Alert.alert(
+        "Email sent ✉️",
+        "Check your inbox for a password reset link.",
+        [{ text: "OK" }],
+      );
+    } catch (err) {
+      Alert.alert(
+        "Failed",
+        "Could not send reset email. Please check your email address.",
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,9 +123,7 @@ export default function LoginScreen() {
               <Text style={styles.logoText}>F</Text>
             </View>
             <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to your FoodShare account
-            </Text>
+            <Text style={styles.subtitle}>Sign in to your GivHive account</Text>
           </View>
 
           {/* Form */}
@@ -173,11 +174,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-  onPress={handleForgotPassword}
-  style={styles.forgotPassword}
->
-  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-</TouchableOpacity>
+              onPress={handleForgotPassword}
+              style={styles.forgotPassword}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push("/(auth)/register")}
@@ -293,13 +294,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   forgotPassword: {
-  alignItems: 'center',
-  paddingVertical: 4,
+    alignItems: "center",
+    paddingVertical: 4,
   },
   forgotPasswordText: {
     fontSize: 14,
     color: COLORS.green,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   registerLink: {
     alignItems: "center",

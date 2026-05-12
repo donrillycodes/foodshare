@@ -58,7 +58,9 @@ export default function LoginPage() {
       ) {
         setError("Invalid email or password. Please try again.");
       } else if (code === "auth/too-many-requests") {
-        setError("Too many failed attempts. Please wait a few minutes and try again.");
+        setError(
+          "Too many failed attempts. Please wait a few minutes and try again.",
+        );
       } else if (code === "auth/user-disabled") {
         setError("Your account has been disabled. Please contact support.");
       } else {
@@ -131,8 +133,11 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-ink-soft mt-5">
-            New to FoodShare?{" "}
-            <Link href="/register" className="text-brand-green hover:underline font-medium">
+            New to GivHive?{" "}
+            <Link
+              href="/register"
+              className="text-brand-green hover:underline font-medium"
+            >
               Create an account
             </Link>
           </p>
@@ -141,4 +146,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

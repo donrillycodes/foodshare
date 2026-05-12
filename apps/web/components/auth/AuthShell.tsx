@@ -28,7 +28,7 @@ export function BrandPanel({
         <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
           <span className="text-white text-sm font-bold">F</span>
         </div>
-        <span className="text-white font-semibold text-sm">FoodShare</span>
+        <span className="text-white font-semibold text-sm">GivHive</span>
       </div>
 
       <div>
@@ -61,7 +61,7 @@ export function BrandPanel({
       </div>
 
       <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-        FoodShare — Winnipeg, Canada
+        GivHive — Winnipeg, Canada
       </p>
     </div>
   );
@@ -73,7 +73,7 @@ export function MobileLogo() {
       <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
         <span className="text-white text-sm font-bold">F</span>
       </div>
-      <span className="font-semibold text-ink text-sm">FoodShare</span>
+      <span className="font-semibold text-ink text-sm">GivHive</span>
     </div>
   );
 }

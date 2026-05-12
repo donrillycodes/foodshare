@@ -37,34 +37,37 @@ type PermissionKey =
   | "canViewDonations"
   | "canManageMembers";
 
-const PERMISSIONS: { key: PermissionKey; label: string; description: string }[] =
-  [
-    {
-      key: "canPostNeeds",
-      label: "Post food needs",
-      description: "Create and edit pantry requests",
-    },
-    {
-      key: "canPostUpdates",
-      label: "Post updates",
-      description: "Publish news to the donor feed",
-    },
-    {
-      key: "canManagePledges",
-      label: "Manage pledges",
-      description: "Confirm, fulfil, or cancel donor pledges",
-    },
-    {
-      key: "canViewDonations",
-      label: "View donations",
-      description: "See cash donations to your NGO",
-    },
-    {
-      key: "canManageMembers",
-      label: "Manage members",
-      description: "Invite or remove team members",
-    },
-  ];
+const PERMISSIONS: {
+  key: PermissionKey;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "canPostNeeds",
+    label: "Post food needs",
+    description: "Create and edit pantry requests",
+  },
+  {
+    key: "canPostUpdates",
+    label: "Post updates",
+    description: "Publish news to the donor feed",
+  },
+  {
+    key: "canManagePledges",
+    label: "Manage pledges",
+    description: "Confirm, fulfil, or cancel donor pledges",
+  },
+  {
+    key: "canViewDonations",
+    label: "View donations",
+    description: "See cash donations to your NGO",
+  },
+  {
+    key: "canManageMembers",
+    label: "Manage members",
+    description: "Invite or remove team members",
+  },
+];
 
 type InviteForm = {
   email: string;
@@ -109,10 +112,7 @@ const ROLE_TONE: Record<NGOMember["role"], BadgeTone> = {
 };
 
 function countPermissions(member: NGOMember): number {
-  return PERMISSIONS.reduce(
-    (acc, p) => acc + (member[p.key] ? 1 : 0),
-    0,
-  );
+  return PERMISSIONS.reduce((acc, p) => acc + (member[p.key] ? 1 : 0), 0);
 }
 
 // ---------- Page ----------
@@ -201,7 +201,9 @@ export default function NGOTeamPage() {
               <div>
                 <p className="text-sm text-ink-soft">
                   {activeMembers.length}{" "}
-                  {activeMembers.length === 1 ? "active member" : "active members"}
+                  {activeMembers.length === 1
+                    ? "active member"
+                    : "active members"}
                   {pendingMembers.length > 0 && (
                     <span className="text-ink-subtle">
                       {" "}
@@ -240,7 +242,7 @@ export default function NGOTeamPage() {
               <EmptyState
                 icon={<Users className="w-5 h-5" />}
                 title="No team members yet"
-                description="Invite staff to help manage your NGO. They'll need a FoodShare account first."
+                description="Invite staff to help manage your NGO. They'll need a GivHive account first."
                 action={
                   <Button onClick={() => setShowInviteForm(true)}>
                     <Plus className="w-3.5 h-3.5" /> Invite your first member
@@ -382,7 +384,7 @@ function InviteComposer({
               Invite a team member
             </p>
             <p className="text-xs text-ink-subtle">
-              They must already have a FoodShare account
+              They must already have a GivHive account
             </p>
           </div>
         </div>
@@ -447,8 +449,8 @@ function InviteComposer({
 
         {isError && (
           <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-            Failed to send invitation. Make sure the user has a FoodShare
-            account first.
+            Failed to send invitation. Make sure the user has a GivHive account
+            first.
           </p>
         )}
 
@@ -591,10 +593,7 @@ function MemberRow({
             {PERMISSIONS.map((perm) => {
               const granted = member[perm.key];
               return (
-                <div
-                  key={perm.key}
-                  className="flex items-start gap-2.5 py-1"
-                >
+                <div key={perm.key} className="flex items-start gap-2.5 py-1">
                   <span
                     className={
                       granted

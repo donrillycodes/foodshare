@@ -30,7 +30,9 @@ type Step = "role" | "details";
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("role");
-  const [selectedRole, setSelectedRole] = useState<"ngo" | "donor" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"ngo" | "donor" | null>(
+    null,
+  );
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -66,7 +68,9 @@ export default function RegisterPage() {
     }
 
     if (strength.level === "weak") {
-      setError("Please choose a stronger password — try a longer phrase or add numbers and symbols.");
+      setError(
+        "Please choose a stronger password — try a longer phrase or add numbers and symbols.",
+      );
       setLoading(false);
       return;
     }
@@ -88,14 +92,17 @@ export default function RegisterPage() {
         router.push("/ngo");
       }
     } catch (err: unknown) {
-      const apiMessage = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? "";
+      const apiMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "";
       const code = (err as { code?: string })?.code ?? "";
       if (
         apiMessage.includes("already exists") ||
         code === "auth/email-already-in-use"
       ) {
-        setError("An account with this email already exists. Please sign in instead.");
+        setError(
+          "An account with this email already exists. Please sign in instead.",
+        );
       } else if (code === "auth/invalid-password") {
         setError("Password must be at least 6 characters");
       } else {
@@ -108,11 +115,11 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       <BrandPanel
-        heading="Join the FoodShare network in Winnipeg."
+        heading="Join the GivHive network in Winnipeg."
         subheading="Create your account and start making a difference — whether you are an NGO receiving donations or a donor making pledges."
         bullets={[
           "NGOs get a verified dashboard to manage needs",
-          "Donors use the FoodShare mobile app",
+          "Donors use the GivHive mobile app",
           "Every pledge tracked, every donation counted",
         ]}
       />
@@ -123,17 +130,22 @@ export default function RegisterPage() {
           <MobileLogo />
 
           <div className="mb-7">
-            <h1 className="text-xl font-semibold text-ink">Create your account</h1>
+            <h1 className="text-xl font-semibold text-ink">
+              Create your account
+            </h1>
             <p className="text-sm text-ink-soft mt-1">
               {step === "role"
-                ? "Choose how you are joining FoodShare"
+                ? "Choose how you are joining GivHive"
                 : "Enter your account details"}
             </p>
           </div>
 
           <div className="bg-white rounded-2xl border border-border-subtle p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             {step === "role" ? (
-              <RoleStep onSelect={handleRoleSelect} selectedRole={selectedRole} />
+              <RoleStep
+                onSelect={handleRoleSelect}
+                selectedRole={selectedRole}
+              />
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
                 <button
@@ -157,11 +169,11 @@ export default function RegisterPage() {
                 {selectedRole === "donor" && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <p className="text-xs text-blue-700 font-medium">
-                      Donors use the FoodShare mobile app
+                      Donors use the GivHive mobile app
                     </p>
                     <p className="text-xs text-blue-600 mt-0.5">
-                      Create your account below — we will direct you to download the
-                      app right after.
+                      Create your account below — we will direct you to download
+                      the app right after.
                     </p>
                   </div>
                 )}

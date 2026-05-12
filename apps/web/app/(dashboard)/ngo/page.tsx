@@ -6,11 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/shared/Header";
 import { ngoApi, foodPledgeApi, donationApi } from "@/lib/api";
-import {
-  formatCurrency,
-  formatRelativeTime,
-  cn,
-} from "@/lib/utils";
+import { formatCurrency, formatRelativeTime, cn } from "@/lib/utils";
 import type { NGODashboard, FoodPledge, Donation } from "@/types";
 import { Badge, statusToTone } from "@/components/ui/Badge";
 import { StatCard } from "@/components/ui/StatCard";
@@ -77,7 +73,7 @@ export default function NGODashboardPage() {
           <EmptyState
             icon={<Package className="w-5 h-5" />}
             title="No NGO found"
-            description="Register your organisation to start receiving donations and food pledges through FoodShare."
+            description="Register your organisation to start receiving donations and food pledges through GivHive."
             action={
               <Link href="/ngo/profile">
                 <Button>
@@ -181,7 +177,7 @@ function StatusBanner({ ngo }: { ngo: NGODashboard["ngo"] }) {
             icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
             wrapper: "bg-red-50 border-red-100",
             title: "Your NGO has been suspended",
-            body: "Please contact support@foodshare.ca to resolve this.",
+            body: "Please contact support@givhive.ca to resolve this.",
           }
         : {
             icon: <AlertTriangle className="w-4 h-4 text-gray-500" />,
@@ -230,7 +226,7 @@ function ApprovedBanner({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex items-center gap-3">
         <CheckCircle className="w-4 h-4 text-brand-green flex-shrink-0" />
         <p className="text-sm text-ink">
-          Your NGO is verified and live on FoodShare
+          Your NGO is verified and live on GivHive
         </p>
       </div>
       <button
@@ -481,16 +477,18 @@ function DonationRow({ donation }: { donation: Donation }) {
 
 // ---------- Setup checklist (right rail) ----------
 
-function SetupChecklist({
-  stats,
-}: {
-  stats?: NGODashboard["stats"];
-}) {
+function SetupChecklist({ stats }: { stats?: NGODashboard["stats"] }) {
   const items = [
     { label: "Profile verified", done: true },
-    { label: "Invite at least one team member", done: (stats?.totalMembers ?? 0) > 1 },
+    {
+      label: "Invite at least one team member",
+      done: (stats?.totalMembers ?? 0) > 1,
+    },
     { label: "Post your first food need", done: (stats?.openNeeds ?? 0) > 0 },
-    { label: "Receive your first pledge", done: (stats?.activePledges ?? 0) > 0 },
+    {
+      label: "Receive your first pledge",
+      done: (stats?.activePledges ?? 0) > 0,
+    },
   ];
   const completed = items.filter((i) => i.done).length;
 

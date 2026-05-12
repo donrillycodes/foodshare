@@ -6,8 +6,8 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FoodShare Dashboard",
-  description: "NGO and Admin dashboard for the FoodShare platform",
+  title: "GivHive Dashboard",
+  description: "NGO and Admin dashboard for the GivHive platform",
 };
 
 export default function RootLayout({

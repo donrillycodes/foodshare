@@ -261,13 +261,10 @@ export class AdminService {
 
     await emailService.sendAdminInvite(
       user.email,
-      inviter ? `${inviter.firstName} ${inviter.lastName}` : 'FoodShare Admin'
+      inviter ? `${inviter.firstName} ${inviter.lastName}` : 'GivHive Admin'
     );
 
-    logger.info(
-      `Admin invited: ${email} by SUPER_ADMIN: ${superAdminId}`
-    );
-
+    logger.info(`Admin invited: ${email} by SUPER_ADMIN: ${superAdminId}`);
 
     return adminMember;
   }

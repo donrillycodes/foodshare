@@ -79,7 +79,7 @@ export class DonationService {
         ngoName: ngo.name,
         isAnonymous: String(input.isAnonymous ?? false),
       },
-      description: `Donation to ${ngo.name} via FoodShare`,
+      description: `Donation to ${ngo.name} via GivHive`,
       receipt_email: donor.email,
     });
 

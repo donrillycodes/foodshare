@@ -20,7 +20,7 @@ export default function WelcomeScreen() {
           <View style={styles.logo}>
             <Text style={styles.logoText}>F</Text>
           </View>
-          <Text style={styles.appName}>FoodShare</Text>
+          <Text style={styles.appName}>GivHive</Text>
           <Text style={styles.tagline}>
             Connecting donors with verified charities in Winnipeg
           </Text>

@@ -246,9 +246,9 @@ const styles = StyleSheet.create({
   bottomPadding: {
     height: 40,
   },
-  coverImage: {
-  height: 200,
-  width: '100%',
-  backgroundColor: COLORS.grayLt,
-},
+  //   coverImage: {
+  //   height: 200,
+  //   width: '100%',
+  //   backgroundColor: COLORS.grayLt,
+  // },
 });
