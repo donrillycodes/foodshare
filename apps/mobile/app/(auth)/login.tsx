@@ -120,7 +120,7 @@ export default function LoginScreen() {
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
             <View style={styles.logo}>
-              <Text style={styles.logoText}>F</Text>
+              <Text style={styles.logoText}>G</Text>
             </View>
             <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>Sign in to your GivHive account</Text>

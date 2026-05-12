@@ -18,7 +18,7 @@ export default function WelcomeScreen() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>F</Text>
+            <Text style={styles.logoText}>G</Text>
           </View>
           <Text style={styles.appName}>GivHive</Text>
           <Text style={styles.tagline}>

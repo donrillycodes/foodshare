@@ -4,6 +4,7 @@ import { AppError } from '../middleware/error';
 import logger from '../utils/logger';
 import { RegisterInput } from '../types';
 import { Role } from '@prisma/client';
+import emailService from './email.service';
 
 export class AuthService {
   // Register a new donor account
@@ -65,6 +66,10 @@ export class AuthService {
       });
 
       logger.info(`New donor registered: ${email}`);
+      // Send welcome email
+      if (user.role === Role.DONOR) {
+        await emailService.sendDonorWelcome(user.email, user.firstName);
+      }
 
       return user;
     } catch (error) {

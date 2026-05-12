@@ -106,6 +106,9 @@ export class NGOService {
 
     logger.info(`New NGO registered: ${ngo.name} by manager: ${managerId}`);
 
+    // Send application received email
+    await emailService.sendNGOApplicationReceived(ngo.email, ngo.name);
+
     return ngo;
   }
 
@@ -620,7 +623,7 @@ export class NGOService {
     invitedById: string,
     email: string,
     role: NGOMemberRole
-    ) {
+  ) {
     // Find the user by email
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase().trim() },
@@ -670,7 +673,10 @@ export class NGOService {
     // Fetch NGO name and inviter name for email
     const [ngo, inviter] = await Promise.all([
       db.nGO.findUnique({ where: { id: ngoId }, select: { name: true } }),
-      db.user.findUnique({ where: { id: invitedById }, select: { firstName: true, lastName: true } }),
+      db.user.findUnique({
+        where: { id: invitedById },
+        select: { firstName: true, lastName: true },
+      }),
     ]);
 
     if (ngo && inviter) {

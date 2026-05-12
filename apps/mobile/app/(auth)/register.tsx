@@ -115,7 +115,7 @@ export default function RegisterScreen() {
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
             <View style={styles.logo}>
-              <Text style={styles.logoText}>F</Text>
+              <Text style={styles.logoText}>G</Text>
             </View>
             <Text style={styles.title}>Create account</Text>
             <Text style={styles.subtitle}>

@@ -191,7 +191,7 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, firstName: e.target.value }))
                     }
-                    placeholder="Emmanuel"
+                    placeholder="First Name"
                     required
                     autoComplete="given-name"
                     leftIcon={<User className="w-4 h-4" />}
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, lastName: e.target.value }))
                     }
-                    placeholder="Oyenuga"
+                    placeholder="Last Name"
                     required
                     autoComplete="family-name"
                   />

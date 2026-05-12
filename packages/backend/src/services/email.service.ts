@@ -9,6 +9,100 @@ const APP_NAME = 'GivHive';
 const DASHBOARD_URL = env.clientUrl;
 
 export class EmailService {
+  // ── Donor Welcome ──────────────────────────────────────────────────────────
+  async sendDonorWelcome(to: string, firstName: string) {
+    try {
+      await resend.emails.send({
+        from: FROM,
+        to,
+        subject: `Welcome to GivHive, ${firstName}! 👋`,
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
+          </div>
+          <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #1A1A1A;">Welcome to GivHive, ${firstName}! 🎉</h2>
+            <p style="color: #4A4A4A; line-height: 1.6;">
+              You have joined a community of donors making a real difference in Winnipeg and beyond.
+              Every donation and food pledge you make goes directly to verified NGOs helping people in need.
+            </p>
+            <div style="background: #E8F5EE; border-radius: 8px; padding: 20px; margin: 16px 0;">
+              <p style="margin: 0; font-weight: bold; color: #1A1A1A;">Here is what you can do:</p>
+              <p style="margin: 8px 0 0 0; color: #4A4A4A; line-height: 1.8;">
+                ❤️ Make cash donations to verified NGOs<br>
+                📦 Pledge food items to specific needs<br>
+                📰 Follow NGO updates and impact stories<br>
+                🔔 Get notified when your pledges are confirmed
+              </p>
+            </div>
+            <a href="https://givhive.com" 
+              style="display: inline-block; background: #1A7A4A; color: white; padding: 12px 24px; 
+              border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+              Start giving →
+            </a>
+            <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
+            <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
+          </div>
+        </div>
+      `,
+      });
+      logger.info(`Email sent: Donor welcome — ${to}`);
+    } catch (error) {
+      logger.error('Failed to send donor welcome email', { error, to });
+    }
+  }
+
+  // ── NGO Application Received ───────────────────────────────────────────────
+  async sendNGOApplicationReceived(to: string, ngoName: string) {
+    try {
+      await resend.emails.send({
+        from: FROM,
+        to,
+        subject: `We received your GivHive application — ${ngoName}`,
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1A7A4A; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">GivHive</h1>
+          </div>
+          <div style="padding: 32px; background: #f9fafb; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #1A1A1A;">Application received! 📋</h2>
+            <p style="color: #4A4A4A; line-height: 1.6;">
+              Thank you for applying to join GivHive. We have received your application for 
+              <strong>${ngoName}</strong> and our team will review it shortly.
+            </p>
+            <div style="background: #FEF3C7; border-radius: 8px; padding: 16px; margin: 16px 0;">
+              <p style="margin: 0; color: #92400E; font-weight: bold;">What happens next?</p>
+              <p style="margin: 8px 0 0 0; color: #92400E; line-height: 1.8;">
+                1. Our team reviews your application<br>
+                2. We may reach out if we need more information<br>
+                3. You will receive an email once a decision is made<br>
+                4. If approved, your NGO goes live on GivHive immediately
+              </p>
+            </div>
+            <p style="color: #4A4A4A; line-height: 1.6;">
+              You can check your application status at any time by logging into your dashboard.
+            </p>
+            <a href="https://givhive.com/ngo/profile" 
+              style="display: inline-block; background: #1A7A4A; color: white; padding: 12px 24px; 
+              border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+              View application status →
+            </a>
+            <hr style="border: none; border-top: 1px solid #E0E0E0; margin: 24px 0;">
+            <p style="color: #9CA3AF; font-size: 12px;">GivHive — Winnipeg, Canada</p>
+          </div>
+        </div>
+      `,
+      });
+      logger.info(`Email sent: NGO application received — ${to}`);
+    } catch (error) {
+      logger.error('Failed to send NGO application received email', {
+        error,
+        to,
+      });
+    }
+  }
+
   // ── NGO Approved ───────────────────────────────────────────────────────────
   async sendNGOApproved(to: string, ngoName: string) {
     try {
