@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { Bell, Check } from "lucide-react";
+import { useSidebar } from "./SidebarContext";
+import { Bell, Check, Menu } from "lucide-react";
 import { formatRelativeTime, cn } from "@/lib/utils";
 import apiClient from "@/lib/api";
 
@@ -23,13 +24,17 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
+  const { toggle } = useSidebar();
   const queryClient = useQueryClient();
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setShowNotifications(false);
       }
     };
@@ -66,7 +71,8 @@ export function Header({ title, subtitle }: HeaderProps) {
   });
 
   const markReadMutation = useMutation({
-    mutationFn: (id: string) => apiClient.patch(`/api/notifications/${id}/read`),
+    mutationFn: (id: string) =>
+      apiClient.patch(`/api/notifications/${id}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["unread-count"] });
       queryClient.refetchQueries({ queryKey: ["unread-count"] });
@@ -78,26 +84,45 @@ export function Header({ title, subtitle }: HeaderProps) {
   const notifications = notificationsData ?? [];
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
-      {/* Page title */}
-      <div>
-        <h1 className="text-base font-semibold text-gray-900 leading-tight">{title}</h1>
-        {subtitle && (
-          <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
-        )}
+    <header className="h-14 bg-white border-b border-border-subtle flex items-center justify-between px-4 lg:px-6 flex-shrink-0 sticky top-0 z-30">
+      {/* Left: hamburger (mobile only) + page title */}
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Hamburger — only visible on mobile */}
+        <button
+          onClick={toggle}
+          className="lg:hidden flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-ink transition-colors"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="min-w-0">
+          <h1 className="text-sm font-semibold text-ink leading-tight truncate">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-xs text-ink-subtle mt-0.5 hidden sm:block">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2" ref={dropdownRef}>
+      {/* Right: notification bell + avatar */}
+      <div className="flex items-center gap-2 flex-shrink-0" ref={dropdownRef}>
         {/* Notification bell */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+            className="relative w-8 h-8 rounded-lg flex items-center justify-center text-ink-muted hover:bg-surface-muted hover:text-ink transition-colors"
+            aria-label="Notifications"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium leading-none" style={{ fontSize: "9px" }}>
+              <span
+                className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center font-semibold leading-none"
+                style={{ fontSize: "9px" }}
+              >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
@@ -105,9 +130,9 @@ export function Header({ title, subtitle }: HeaderProps) {
 
           {/* Notifications dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-900">
+            <div className="absolute right-0 top-10 w-80 bg-white rounded-2xl shadow-pop border border-border-subtle z-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+                <p className="text-sm font-semibold text-ink">
                   Notifications
                   {unreadCount > 0 && (
                     <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
@@ -118,7 +143,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllReadMutation.mutate()}
-                    className="flex items-center gap-1 text-xs text-brand-green hover:underline"
+                    className="flex items-center gap-1 text-xs text-brand-green hover:underline font-medium"
                   >
                     <Check className="w-3 h-3" />
                     Mark all read
@@ -128,8 +153,10 @@ export function Header({ title, subtitle }: HeaderProps) {
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <Bell className="w-6 h-6 text-gray-200 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400">No notifications yet</p>
+                    <Bell className="w-6 h-6 text-ink-subtle/30 mx-auto mb-2" />
+                    <p className="text-xs text-ink-subtle">
+                      No notifications yet
+                    </p>
                   </div>
                 ) : (
                   notifications.map((notification) => (
@@ -141,20 +168,28 @@ export function Header({ title, subtitle }: HeaderProps) {
                         }
                       }}
                       className={cn(
-                        "px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors",
-                        notification.status === "UNREAD" ? "bg-brand-green-lt" : "bg-white",
+                        "px-4 py-3 border-b border-border-subtle cursor-pointer hover:bg-surface-muted transition-colors",
+                        notification.status === "UNREAD"
+                          ? "bg-brand-green-lt"
+                          : "bg-white",
                       )}
                     >
                       <div className="flex items-start gap-2">
                         {notification.status === "UNREAD" && (
                           <div className="w-1.5 h-1.5 rounded-full bg-brand-green flex-shrink-0 mt-1.5" />
                         )}
-                        <div className={notification.status === "UNREAD" ? "" : "ml-3.5"}>
-                          <p className="text-xs font-medium text-gray-900">
+                        <div
+                          className={
+                            notification.status === "UNREAD" ? "" : "ml-3.5"
+                          }
+                        >
+                          <p className="text-xs font-semibold text-ink">
                             {notification.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">{notification.body}</p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-ink-muted mt-0.5">
+                            {notification.body}
+                          </p>
+                          <p className="text-xs text-ink-subtle mt-1">
                             {formatRelativeTime(notification.createdAt)}
                           </p>
                         </div>

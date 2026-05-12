@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "GivHive Dashboard",
-  description: "NGO and Admin dashboard for the GivHive platform",
+  description:
+    "NGO and Admin dashboard for the GivHive platform — connecting food donors with communities in Winnipeg.",
 };
 
 export default function RootLayout({
@@ -17,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={plusJakartaSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

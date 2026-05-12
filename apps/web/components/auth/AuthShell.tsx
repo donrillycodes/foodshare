@@ -1,11 +1,30 @@
 import { ShieldCheck } from "lucide-react";
 
-// AuthShell — small shared bits for /login, /register and /download.
-// The brand panel sits on the left on desktop and disappears on mobile;
-// the mobile logo takes its place at the top of the form. Keeping these
-// in one file means the marketing copy on the dark panel only changes
-// in one place if it changes at all.
+// AuthShell — shared pieces for /login, /register, and /download.
+// The brand panel sits on the left on desktop; on mobile it collapses to
+// a compact top logo + tagline. Everything references GivHive.
 
+// ─── Hexagon hive logo mark ────────────────────────────────────────────────
+export function HiveMark({ size = 32 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 28 28"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M14 2L24.3923 8V20L14 26L3.60769 20V8L14 2Z" fill="#1a7a4a" />
+      <path
+        d="M14 7L19.1962 10V16L14 19L8.80385 16V10L14 7Z"
+        fill="#4de69e"
+        opacity="0.9"
+      />
+    </svg>
+  );
+}
+
+// ─── Dark brand panel (desktop left column) ────────────────────────────────
 export function BrandPanel({
   heading = "Connecting food donors with the communities that need them most.",
   subheading = "The management dashboard for NGOs and administrators running food donation programmes in Winnipeg.",
@@ -22,22 +41,24 @@ export function BrandPanel({
   return (
     <div
       className="hidden lg:flex lg:w-[420px] flex-col justify-between p-10 flex-shrink-0"
-      style={{ background: "#0d1f17" }}
+      style={{ background: "#0b1c13" }}
     >
+      {/* Logo */}
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-          <span className="text-white text-sm font-bold">F</span>
-        </div>
-        <span className="text-white font-semibold text-sm">GivHive</span>
+        <HiveMark size={28} />
+        <span className="text-white font-semibold text-sm tracking-tight">
+          GivHive
+        </span>
       </div>
 
+      {/* Copy */}
       <div>
         <h2 className="text-2xl font-semibold text-white leading-snug mb-3">
           {heading}
         </h2>
         <p
           className="text-sm leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.55)" }}
+          style={{ color: "rgba(255,255,255,0.52)" }}
         >
           {subheading}
         </p>
@@ -51,7 +72,7 @@ export function BrandPanel({
               />
               <p
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.55)" }}
+                style={{ color: "rgba(255,255,255,0.52)" }}
               >
                 {point}
               </p>
@@ -60,24 +81,31 @@ export function BrandPanel({
         </div>
       </div>
 
-      <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+      <p className="text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>
         GivHive — Winnipeg, Canada
       </p>
     </div>
   );
 }
 
+// ─── Mobile top logo (replaces the brand panel on small screens) ───────────
 export function MobileLogo() {
   return (
-    <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-      <div className="w-8 h-8 rounded-lg bg-brand-green flex items-center justify-center">
-        <span className="text-white text-sm font-bold">F</span>
+    <div className="flex flex-col items-center mb-8 lg:hidden">
+      <div className="flex items-center gap-2.5 mb-1">
+        <HiveMark size={28} />
+        <span className="font-semibold text-ink text-base tracking-tight">
+          GivHive
+        </span>
       </div>
-      <span className="font-semibold text-ink text-sm">GivHive</span>
+      <p className="text-xs text-ink-subtle text-center">
+        NGO &amp; Admin Dashboard
+      </p>
     </div>
   );
 }
 
+// ─── Google SSO placeholder ────────────────────────────────────────────────
 export function GoogleIcon() {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -101,20 +129,17 @@ export function GoogleIcon() {
   );
 }
 
-// GoogleSoonButton — the placeholder Google button used on login + register.
-// Click hands the message back to the parent so it can show it inside the
-// existing error banner instead of a toast we don't have yet.
 export function GoogleSoonButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-2.5 h-10 px-4 rounded-lg border border-border-default bg-white text-sm font-medium text-ink hover:bg-surface-muted transition-colors relative"
+      className="w-full flex items-center justify-center gap-2.5 h-10 px-4 rounded-xl border border-border-default bg-white text-sm font-medium text-ink hover:bg-surface-muted transition-colors relative"
     >
       <GoogleIcon />
       Continue with Google
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
-        Coming soon
+        Soon
       </span>
     </button>
   );
@@ -124,7 +149,7 @@ export function OrDivider({ label = "or use email" }: { label?: string }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 h-px bg-border-subtle" />
-      <span className="text-[11px] text-ink-subtle uppercase tracking-wide">
+      <span className="text-[11px] text-ink-subtle uppercase tracking-wide font-medium">
         {label}
       </span>
       <div className="flex-1 h-px bg-border-subtle" />

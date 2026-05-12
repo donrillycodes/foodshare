@@ -1,11 +1,10 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-// StatCard — the four tiles you see at the top of most dashboard pages.
-// Designed so the value reads first (large), the label second (small/grey),
-// and an optional metadata line ties it to a real-world meaning ("3 awaiting
-// approval", "+12% vs last week"). Trend colour shifts the metadata green or
-// red without making it loud.
+// StatCard — four summary tiles at the top of dashboard pages.
+// Value reads first (large), label second (small/muted), optional
+// meta line anchors it to real-world meaning.
 
 type Trend = "up" | "down" | "neutral";
 
@@ -19,10 +18,17 @@ interface StatCardProps {
   className?: string;
 }
 
-const TREND_CLASSES: Record<Trend, string> = {
-  up: "text-emerald-600",
-  down: "text-red-600",
-  neutral: "text-ink-subtle",
+const TREND_CONFIG: Record<
+  Trend,
+  {
+    text: string;
+    bg: string;
+    Icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  up: { text: "text-emerald-700", bg: "bg-emerald-50", Icon: TrendingUp },
+  down: { text: "text-red-600", bg: "bg-red-50", Icon: TrendingDown },
+  neutral: { text: "text-ink-subtle", bg: "bg-surface-muted", Icon: Minus },
 };
 
 export function StatCard({
@@ -34,22 +40,25 @@ export function StatCard({
   iconClassName,
   className,
 }: StatCardProps) {
+  const { text, bg, Icon } = TREND_CONFIG[trend];
+
   return (
     <div
       className={cn(
-        "bg-white rounded-xl border border-border-subtle p-5",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
+        "bg-white rounded-2xl border border-border-subtle p-5",
+        "shadow-[0_1px_3px_rgba(13,26,18,0.05)]",
+        "hover:shadow-[0_4px_12px_rgba(13,26,18,0.07)] transition-shadow duration-200",
         className,
       )}
     >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-medium text-ink-subtle uppercase tracking-wide">
+        <p className="text-xs font-semibold text-ink-subtle uppercase tracking-widest">
           {label}
         </p>
         {icon && (
           <div
             className={cn(
-              "w-8 h-8 rounded-lg bg-brand-green-lt text-brand-green flex items-center justify-center",
+              "w-8 h-8 rounded-xl bg-brand-green-lt text-brand-green flex items-center justify-center",
               iconClassName,
             )}
           >
@@ -57,9 +66,20 @@ export function StatCard({
           </div>
         )}
       </div>
-      <p className="text-2xl font-semibold text-ink leading-tight">{value}</p>
+
+      <p className="text-2xl font-bold text-ink leading-tight">{value}</p>
+
       {meta && (
-        <p className={cn("text-xs mt-2", TREND_CLASSES[trend])}>{meta}</p>
+        <div
+          className={cn(
+            "inline-flex items-center gap-1 mt-2 text-xs px-2 py-0.5 rounded-full",
+            bg,
+            text,
+          )}
+        >
+          <Icon className="w-3 h-3" />
+          <span>{meta}</span>
+        </div>
       )}
     </div>
   );
