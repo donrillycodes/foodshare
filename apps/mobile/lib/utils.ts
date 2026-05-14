@@ -73,17 +73,26 @@ export function getProgress(fulfilled: number, required: number): number {
 
 // Brand colours — used across components
 export const COLORS = {
-  green: "#1A7A4A",
-  greenDk: "#145E38",
-  greenLt: "#E8F5EE",
-  greenMid: "#2D9E64",
-  gray: "#4A4A4A",
-  grayLt: "#F5F5F5",
-  grayMd: "#E0E0E0",
+  // Primary brand
+  orange: "#F09810",
+  orangeDk: "#D4860E",
+  orangeLt: "#FEF3DC",
+
+  // Dark green
+  greenDk: "#0B3926",
+  green: "#1A5C3A",
+  greenLt: "#6B8B6B",
+
+  // Neutrals
   white: "#FFFFFF",
-  black: "#1A1A1A",
-  red: "#DC2626",
-  amber: "#D97706",
-  blue: "#1D4ED8",
+  black: "#1C2E1C",
   background: "#F9FAFB",
+  gray: "#4A4A4A",
+  grayMd: "#E0E0E0",
+  grayLt: "#F5F5F5",
+
+  // Status
+  red: "#DC2626",
+  amber: "#F59E0B",
+  blue: "#1D4ED8",
 };

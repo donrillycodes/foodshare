@@ -8,14 +8,16 @@
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   /* ── Brand green — full scale ─────────────────────────────────────── */
-  --color-brand-green-50: #f0f9f4;
-  --color-brand-green-100: #d1ebde;
-  --color-brand-green-200: #a3d7bd;
-  --color-brand-green-300: #6dc196;
-  --color-brand-green-400: #2d9e64;
-  --color-brand-green-500: #1a7a4a;
-  --color-brand-green-600: #145e38;
-  --color-brand-green-700: #0d4527;
+  --color-brand-orange: #f09810;
+  --color-brand-orange-dk: #d4860e;
+  --color-brand-orange-lt: #fef3dc;
+  --color-brand-green: #1a5c3a;
+  --color-brand-green-dk: #0b3926;
+  --color-brand-green-lt: #6b8b6b;
+  --color-brand-black: #1c2e1c;
+  --color-brand-gray: #4a4a4a;
+  --color-brand-gray-lt: #f5f5f5;
+  --color-brand-gray-md: #e0e0e0;
 
   /* ── Brand legacy aliases (kept so existing components keep working) ─ */
   --color-brand-green: #1a7a4a;
