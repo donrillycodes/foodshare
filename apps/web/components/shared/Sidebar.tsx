@@ -17,6 +17,7 @@ import {
   LogOut,
   Building2,
   X,
+  CreditCard,
 } from "lucide-react";
 
 interface NavItem {
@@ -67,6 +68,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
     },
     { label: "Pledges", href: "/ngo/pledges", icon: Heart },
     { label: "Updates", href: "/ngo/updates", icon: FileText },
+    { label: "Stripe Payouts", href: "/ngo/stripe", icon: CreditCard },
     {
       label: "Profile",
       href: "/ngo/profile",
