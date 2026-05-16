@@ -26,6 +26,9 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
+  Briefcase,
+  User,
+  FileText,
 } from "lucide-react";
 
 const CATEGORY_OPTIONS = [
@@ -42,6 +45,10 @@ type FormState = {
   phone: string;
   description: string;
   mission: string;
+  craNumber: string;
+  orgType: string;
+  primaryContactName: string;
+  primaryContactTitle: string;
   category: string;
   website: string;
   address: string;
@@ -59,6 +66,10 @@ const EMPTY_FORM: FormState = {
   phone: "",
   description: "",
   mission: "",
+  craNumber: "",
+  orgType: "",
+  primaryContactName: "",
+  primaryContactTitle: "",
   category: "FOOD_BANK",
   website: "",
   address: "",
@@ -118,6 +129,10 @@ export default function NGOProfilePage() {
         coverUrl: ngo.coverUrl ?? "",
         description: ngo.description,
         mission: ngo.mission ?? "",
+        craNumber: ngo.craNumber ?? "",
+        orgType: ngo.orgType ?? "",
+        primaryContactName: ngo.primaryContactName ?? "",
+        primaryContactTitle: ngo.primaryContactTitle ?? "",
         category: ngo.category,
         website: ngo.website ?? "",
         address: ngo.address,
@@ -314,6 +329,11 @@ function ProfileDetails({ ngo }: { ngo: NGODashboard["ngo"] }) {
     { label: "Email", value: ngo.email, icon: Mail },
     { label: "Phone", value: ngo.phone, icon: Phone },
     { label: "Website", value: ngo.website, icon: Globe },
+    { label: "CRA Number", value: ngo.craNumber, icon: FileText },
+    { label: "Org Type", value: ngo.orgType, icon: Building2 },
+    { label: "Primary Contact", value: ngo.primaryContactName, icon: User },
+    { label: "Contact Title", value: ngo.primaryContactTitle, icon: Briefcase },
+
     {
       label: "Category",
       value:
@@ -337,7 +357,7 @@ function ProfileDetails({ ngo }: { ngo: NGODashboard["ngo"] }) {
         {rows.map((row) => (
           <div key={row.label} className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-surface-muted flex items-center justify-center flex-shrink-0">
-              <row.icon className="w-3.5 h-3.5 text-ink-soft" />
+              {row.icon && <row.icon className="w-3.5 h-3.5 text-ink-soft" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-medium text-ink-subtle uppercase tracking-wide">
@@ -463,6 +483,51 @@ function ProfileForm({
             onChange={(e) => updateField("coverUrl", e.target.value)}
             placeholder="https://yourorg.ca/cover.jpg"
           />
+        </FormSection>
+
+        <FormSection title="Verification">
+          <TextField
+            label="CRA Charity Number"
+            value={form.craNumber}
+            onChange={(e) => updateField("craNumber", e.target.value)}
+            placeholder="e.g. 123456789 RR 0001"
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <TextField
+              label="Primary Contact Name"
+              value={form.primaryContactName}
+              onChange={(e) =>
+                updateField("primaryContactName", e.target.value)
+              }
+              placeholder="Full name"
+            />
+            <TextField
+              label="Contact Title"
+              value={form.primaryContactTitle}
+              onChange={(e) =>
+                updateField("primaryContactTitle", e.target.value)
+              }
+              placeholder="e.g. Executive Director"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1.5">
+              Organisation Type
+            </label>
+            <select
+              value={form.orgType}
+              onChange={(e) => updateField("orgType", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green bg-white text-ink"
+            >
+              <option value="">Select type</option>
+              <option value="REGISTERED_CHARITY">
+                Registered Charity (CRA)
+              </option>
+              <option value="NON_PROFIT">Non-Profit Organisation</option>
+              <option value="COMMUNITY_GROUP">Community Group</option>
+              <option value="SOCIAL_ENTERPRISE">Social Enterprise</option>
+            </select>
+          </div>
         </FormSection>
 
         <FormSection title="Address">

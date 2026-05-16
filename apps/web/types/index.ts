@@ -39,6 +39,10 @@ export interface NGO {
   phone?: string;
   description: string;
   mission?: string;
+  craNumber?: string | null;
+  orgType?: string | null;
+  primaryContactName?: string | null;
+  primaryContactTitle?: string | null;
   category: NGOCategory;
   logoUrl?: string;
   coverUrl?: string;

@@ -257,6 +257,10 @@ model NGO {
   postalCode String
 
   // Verification
+  craNumber          String?
+  orgType            String?
+  primaryContactName String?
+  primaryContactTitle String?
   status            NGOStatus @default(PENDING)
   rejectionReason   String?
   resubmissionCount Int       @default(0)
