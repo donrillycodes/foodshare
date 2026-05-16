@@ -31,6 +31,10 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [craNumber, setCraNumber] = useState("");
+  const [orgType, setOrgType] = useState("");
+  const [primaryContactName, setPrimaryContactName] = useState("");
+  const [primaryContactTitle, setPrimaryContactTitle] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,7 +62,14 @@ export default function RegisterScreen() {
         email: email.trim().toLowerCase(),
         password,
         role,
+        ...(role === "NGO" && {
+          craNumber: craNumber.trim() || undefined,
+          orgType: orgType || undefined,
+          primaryContactName: primaryContactName.trim() || undefined,
+          primaryContactTitle: primaryContactTitle.trim() || undefined,
+        }),
       });
+
       const firebaseUser = await signIn(email.trim().toLowerCase(), password);
       const token = await firebaseUser.getIdToken();
       setToken(token);
@@ -314,6 +325,109 @@ export default function RegisterScreen() {
               </View>
             </View>
 
+            {/* NGO verification fields — only shown when NGO role selected */}
+            {role === "NGO" && (
+              <>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>CRA Charity Number</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={18}
+                      color={COLORS.textSub}
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={craNumber}
+                      onChangeText={setCraNumber}
+                      placeholder="e.g. 123456789 RR 0001"
+                      placeholderTextColor={COLORS.textHint}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Primary Contact Name</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons
+                      name="person-outline"
+                      size={18}
+                      color={COLORS.textSub}
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={primaryContactName}
+                      onChangeText={setPrimaryContactName}
+                      placeholder="Full name"
+                      placeholderTextColor={COLORS.textHint}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Contact Title</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons
+                      name="briefcase-outline"
+                      size={18}
+                      color={COLORS.textSub}
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={primaryContactTitle}
+                      onChangeText={setPrimaryContactTitle}
+                      placeholder="e.g. Executive Director"
+                      placeholderTextColor={COLORS.textHint}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Organisation Type</Text>
+                  <View style={styles.orgTypeRow}>
+                    {[
+                      {
+                        value: "REGISTERED_CHARITY",
+                        label: "Registered Charity",
+                      },
+                      { value: "NON_PROFIT", label: "Non-Profit" },
+                      { value: "COMMUNITY_GROUP", label: "Community Group" },
+                      {
+                        value: "SOCIAL_ENTERPRISE",
+                        label: "Social Enterprise",
+                      },
+                    ].map((type) => (
+                      <TouchableOpacity
+                        key={type.value}
+                        style={[
+                          styles.orgTypeChip,
+                          orgType === type.value && styles.orgTypeChipActive,
+                        ]}
+                        onPress={() => setOrgType(type.value)}
+                        activeOpacity={0.8}
+                      >
+                        <Text
+                          style={[
+                            styles.orgTypeChipText,
+                            orgType === type.value &&
+                              styles.orgTypeChipTextActive,
+                          ]}
+                        >
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
+
             {/* Error message */}
             {error ? (
               <View style={styles.errorBox}>
@@ -553,5 +667,31 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     flex: 1,
     lineHeight: 18,
+  },
+  orgTypeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACE.sm,
+  },
+  orgTypeChip: {
+    paddingHorizontal: SPACE.md,
+    paddingVertical: SPACE.sm,
+    borderRadius: RADII.full,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+  },
+  orgTypeChipActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight,
+  },
+  orgTypeChipText: {
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
+    fontWeight: "500",
+  },
+  orgTypeChipTextActive: {
+    color: COLORS.primary,
+    fontWeight: "700",
   },
 });
