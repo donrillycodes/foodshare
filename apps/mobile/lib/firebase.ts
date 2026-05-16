@@ -42,7 +42,7 @@ export const logOut = async (): Promise<void> => {
 };
 
 export const sendPasswordReset = async (email: string): Promise<void> => {
-  const { sendPasswordResetEmail } = await import('firebase/auth');
+  const { sendPasswordResetEmail } = await import("firebase/auth");
   await sendPasswordResetEmail(auth, email);
 };
 

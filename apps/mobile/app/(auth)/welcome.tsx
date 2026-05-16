@@ -3,58 +3,137 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
-  Image,
+  StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { COLORS } from "../../lib/utils";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONT, SPACE, RADII } from "../../lib/utils";
+
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+interface Slide {
+  tag: string;
+  headline: string;
+  body: string;
+  icon: IoniconName;
+  iconBg: string;
+  iconColor: string;
+}
+
+const slides: Slide[] = [
+  {
+    tag: "WINNIPEG GIVING, SIMPLIFIED",
+    headline: "Turn extra food\ninto real help.",
+    body: "GivHive connects donors with verified charities so meals, supplies, and cash donations reach people faster.",
+    icon: "heart-outline",
+    iconBg: COLORS.primaryLight,
+    iconColor: COLORS.primary,
+  },
+  {
+    tag: "FOR DONORS",
+    headline: "Find urgent food\nneeds nearby.",
+    body: "See what local NGOs need, pledge items in seconds, and keep every donation organized in one place.",
+    icon: "location-outline",
+    iconBg: COLORS.accentLight,
+    iconColor: COLORS.accent,
+  },
+  {
+    tag: "FOR CHARITIES",
+    headline: "Post needs.\nTrack impact.",
+    body: "Organizations can manage food requests, pledges, and donation activity from one trusted network.",
+    icon: "business-outline",
+    iconBg: "#EEF2FF",
+    iconColor: COLORS.blue,
+  },
+];
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const [index, setIndex] = useState(0);
+  const slide = slides[index];
+  const isLast = index === slides.length - 1;
+
+  const handleNext = () => {
+    if (isLast) {
+      router.push("/(auth)/register");
+    } else {
+      setIndex((i) => i + 1);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>G</Text>
-          </View>
-          <Text style={styles.appName}>GivHive</Text>
-          <Text style={styles.tagline}>
-            Connecting donors with verified charities in Winnipeg
-          </Text>
-        </View>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-        {/* Illustration placeholder */}
-        <View style={styles.illustration}>
-          <Text style={styles.illustrationEmoji}>🌱</Text>
-          <Text style={styles.illustrationText}>
-            Make a difference today — donate cash or pledge food to local
-            charities that need it most.
-          </Text>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <View style={styles.logoMark}>
+          <Ionicons name="leaf" size={16} color={COLORS.primary} />
         </View>
-
-        {/* Actions */}
-        <View style={styles.actions}>
+        {!isLast && (
           <TouchableOpacity
-            style={styles.primaryButton}
             onPress={() => router.push("/(auth)/register")}
-            activeOpacity={0.8}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <Text style={styles.skip}>Skip</Text>
           </TouchableOpacity>
+        )}
+      </View>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("/(auth)/login")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.secondaryButtonText}>
-              Already have an account? Sign in
-            </Text>
-          </TouchableOpacity>
+      {/* Slide content */}
+      <View style={styles.content}>
+        <View style={[styles.iconWrap, { backgroundColor: slide.iconBg }]}>
+          <Ionicons name={slide.icon} size={52} color={slide.iconColor} />
         </View>
+
+        <View style={styles.textBlock}>
+          <Text style={styles.tag}>{slide.tag}</Text>
+          <Text style={styles.headline}>{slide.headline}</Text>
+          <Text style={styles.body}>{slide.body}</Text>
+        </View>
+      </View>
+
+      {/* Bottom controls */}
+      <View style={styles.bottom}>
+        {/* Progress dots */}
+        <View style={styles.dots}>
+          {slides.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === index ? styles.dotActive : styles.dotInactive,
+              ]}
+            />
+          ))}
+        </View>
+
+        {/* CTA */}
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={handleNext}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.btnText}>
+            {isLast ? "Get started" : "Continue"}
+          </Text>
+          <Ionicons name="arrow-forward" size={18} color={COLORS.surface} />
+        </TouchableOpacity>
+
+        {/* Sign-in link — last slide only */}
+        {isLast ? (
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/login")}
+            style={styles.signInLink}
+          >
+            <Text style={styles.signInText}>Already have an account? </Text>
+            <Text style={[styles.signInText, styles.signInCta]}>Sign in</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.signInLink} />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -65,79 +144,106 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 32,
+  topBar: {
+    flexDirection: "row",
     justifyContent: "space-between",
-  },
-  logoContainer: {
     alignItems: "center",
-    marginTop: 20,
+    paddingHorizontal: SPACE.xl,
+    paddingTop: SPACE.lg,
+    paddingBottom: SPACE.sm,
   },
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: COLORS.green,
+  logoMark: {
+    width: 36,
+    height: 36,
+    borderRadius: RADII.sm,
+    backgroundColor: COLORS.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
   },
-  logoText: {
-    color: COLORS.white,
-    fontSize: 32,
-    fontWeight: "bold",
+  skip: {
+    fontSize: FONT.base,
+    color: COLORS.textSub,
+    fontWeight: "500",
   },
-  appName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: 8,
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACE["2xl"],
+    justifyContent: "center",
+    gap: SPACE["3xl"],
   },
-  tagline: {
-    fontSize: 15,
-    color: COLORS.gray,
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  illustration: {
+  iconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: RADII.xl,
     alignItems: "center",
-    paddingHorizontal: 20,
+    justifyContent: "center",
   },
-  illustrationEmoji: {
-    fontSize: 80,
-    marginBottom: 20,
+  textBlock: {
+    gap: SPACE.md,
   },
-  illustrationText: {
-    fontSize: 16,
-    color: COLORS.gray,
-    textAlign: "center",
+  tag: {
+    fontSize: FONT.xs,
+    fontWeight: "700",
+    letterSpacing: 2,
+    color: COLORS.accent,
+  },
+  headline: {
+    fontSize: FONT["3xl"],
+    fontWeight: "800",
+    color: COLORS.text,
+    lineHeight: 36,
+  },
+  body: {
+    fontSize: FONT.base,
+    color: COLORS.textSub,
     lineHeight: 24,
   },
-  actions: {
-    gap: 12,
+  bottom: {
+    paddingHorizontal: SPACE.xl,
+    paddingBottom: SPACE["3xl"],
+    gap: SPACE.lg,
   },
-  primaryButton: {
-    backgroundColor: COLORS.green,
-    paddingVertical: 16,
-    borderRadius: 14,
+  dots: {
+    flexDirection: "row",
+    gap: SPACE.sm,
+  },
+  dot: {
+    height: 5,
+    borderRadius: RADII.full,
+  },
+  dotActive: {
+    width: 24,
+    backgroundColor: COLORS.primary,
+  },
+  dotInactive: {
+    width: 6,
+    backgroundColor: COLORS.border,
+  },
+  btn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADII.lg,
+    paddingVertical: SPACE.lg,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: SPACE.sm,
   },
-  primaryButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
+  btnText: {
+    fontSize: FONT.base,
+    fontWeight: "700",
+    color: COLORS.surface,
+  },
+  signInLink: {
+    flexDirection: "row",
+    justifyContent: "center",
+    minHeight: 22,
+  },
+  signInText: {
+    fontSize: FONT.md,
+    color: COLORS.textSub,
+  },
+  signInCta: {
+    color: COLORS.primary,
     fontWeight: "600",
-  },
-  secondaryButton: {
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: COLORS.green,
-    fontSize: 15,
-    fontWeight: "500",
   },
 });

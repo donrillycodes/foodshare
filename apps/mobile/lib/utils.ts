@@ -1,15 +1,99 @@
+// ── Harvest Design Tokens ──────────────────────────────────────────────────────
+export const COLORS = {
+  // Primary — forest green
+  primary: "#2A6041",
+  primaryDark: "#1A4A30",
+  primaryLight: "#E8F4EE",
+
+  // Accent — warm orange (urgency, highlights)
+  accent: "#E8793A",
+  accentLight: "#FEF0E8",
+
+  // Surfaces
+  background: "#FAFAF7",
+  surface: "#FFFFFF",
+  surfaceAlt: "#F4F4F0",
+
+  // Typography
+  text: "#1C1C1C",
+  textSub: "#6B7280",
+  textHint: "#9CA3AF",
+
+  // Borders
+  border: "#E8E8E4",
+  borderStrong: "#D0D0CC",
+
+  // Semantic
+  success: "#16A34A",
+  successLight: "#DCFCE7",
+  warning: "#D97706",
+  warningLight: "#FEF3C7",
+  error: "#DC2626",
+  errorLight: "#FEF2F2",
+  errorBorder: "#FECACA",
+
+  // ── Backward-compat aliases (all existing COLORS.x references still work) ──
+  orange: "#E8793A",
+  orangeDk: "#C9622A",
+  orangeLt: "#FEF0E8",
+  greenDk: "#1A4A30",
+  green: "#2A6041",
+  greenLt: "#E8F4EE", // was '#6B8B6B' — now a proper light tint
+  white: "#FFFFFF",
+  black: "#1C1C1C",
+  gray: "#6B7280",
+  grayMd: "#E8E8E4",
+  grayLt: "#F4F4F0",
+  red: "#DC2626",
+  amber: "#D97706",
+  blue: "#3B4DBF",
+} as const;
+
+// ── Typography scale ───────────────────────────────────────────────────────────
+export const FONT = {
+  xs: 11,
+  sm: 12,
+  md: 14,
+  base: 15,
+  lg: 17,
+  xl: 20,
+  "2xl": 24,
+  "3xl": 28,
+  "4xl": 34,
+} as const;
+
+// ── Spacing scale ──────────────────────────────────────────────────────────────
+export const SPACE = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  "2xl": 24,
+  "3xl": 32,
+} as const;
+
+// ── Border radii ───────────────────────────────────────────────────────────────
+export const RADII = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  "2xl": 28,
+  full: 9999,
+} as const;
+
+// ── Helper functions (unchanged) ───────────────────────────────────────────────
 // Format currency — always two decimal places
 export function formatCurrency(
   amount: number | string,
-  currency: string = "CAD",
+  currency = "CAD",
 ): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency,
-  }).format(num);
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format(
+    num,
+  );
 }
-
 // Format date — human readable
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -18,7 +102,6 @@ export function formatDate(date: string | Date): string {
     day: "numeric",
   }).format(new Date(date));
 }
-
 // Format relative time — "2 hours ago"
 export function formatRelativeTime(date: string | Date): string {
   const now = new Date();
@@ -59,40 +142,12 @@ export function formatCategory(category: string): string {
     .toLowerCase()
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
-
 // Format status for display
 export function formatStatus(status: string): string {
   return status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, " ");
 }
-
 // Get progress percentage
 export function getProgress(fulfilled: number, required: number): number {
   if (required === 0) return 0;
   return Math.min(Math.round((fulfilled / required) * 100), 100);
 }
-
-// Brand colours — used across components
-export const COLORS = {
-  // Primary brand
-  orange: "#F09810",
-  orangeDk: "#D4860E",
-  orangeLt: "#FEF3DC",
-
-  // Dark green
-  greenDk: "#0B3926",
-  green: "#1A5C3A",
-  greenLt: "#6B8B6B",
-
-  // Neutrals
-  white: "#FFFFFF",
-  black: "#1C2E1C",
-  background: "#F9FAFB",
-  gray: "#4A4A4A",
-  grayMd: "#E0E0E0",
-  grayLt: "#F5F5F5",
-
-  // Status
-  red: "#DC2626",
-  amber: "#F59E0B",
-  blue: "#1D4ED8",
-};

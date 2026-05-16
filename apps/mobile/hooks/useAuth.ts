@@ -43,9 +43,7 @@ export function useAuth() {
     try {
       await logOut();
       clearAuth();
-    } catch (error) {
-      console.error("Sign out failed", error);
-    }
+    } catch (error) {}
   };
 
   return {

@@ -1,0 +1,48 @@
+<svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="680" height="360">
+
+  <!-- === PRIMARY VERSION — transparent / light background === -->
+  <g transform="translate(0, 14)">
+    <!-- Pointy-top hexagon: cx=40, cy=38, R=32 -->
+    <!-- Vertices: top(40,6) tr(67.7,22) br(67.7,54) bot(40,70) bl(12.3,54) tl(12.3,22) -->
+    <polygon points="40,6 67.7,22 67.7,54 40,70 12.3,54 12.3,22" fill="#F09810"/>
+
+    <!-- Heart inside: centered at (40,42), spans x:29-51, y:33-56 -->
+    <path d="M40,37 C40,30 29,30 29,37 C29,43.5 40,53 40,56 C40,53 51,43.5 51,37 C51,30 40,30 40,37Z" fill="white"/>
+
+    <!-- Leaf / sprout above the heart's top indentation -->
+    <path d="M40,30 C36.5,23 38,17 40,14 C42,17 43.5,23 40,30Z" fill="white"/>
+
+    <!-- Wordmark: Giv (thin) + Hive (black) -->
+    <text x="86" y="48" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="36">
+      <tspan font-weight="300" fill="#1C2E1C">Giv</tspan><tspan font-weight="900" fill="#F09810">Hive</tspan>
+    </text>
+
+    <!-- Tagline -->
+    <text x="87" y="64" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
+          font-size="10" fill="#6B8B6B" font-weight="400" letter-spacing="1.2">WINNIPEG GIVING, SIMPLIFIED</text>
+  </g>
+
+  <!-- === DARK VERSION — dark green background === -->
+  <rect x="0" y="100" width="340" height="72" rx="10" fill="#0B3926"/>
+  <g transform="translate(0, 114)">
+    <!-- Same hexagon -->
+    <polygon points="40,6 67.7,22 67.7,54 40,70 12.3,54 12.3,22" fill="#F09810"/>
+    <path d="M40,37 C40,30 29,30 29,37 C29,43.5 40,53 40,56 C40,53 51,43.5 51,37 C51,30 40,30 40,37Z" fill="white"/>
+    <path d="M40,30 C36.5,23 38,17 40,14 C42,17 43.5,23 40,30Z" fill="white"/>
+
+    <!-- Wordmark on dark: white Giv + orange Hive -->
+    <text x="86" y="48" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="36">
+      <tspan font-weight="300" fill="rgba(255,255,255,0.92)">Giv</tspan><tspan font-weight="900" fill="#F09810">Hive</tspan>
+    </text>
+    <text x="87" y="64" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
+          font-size="10" fill="rgba(255,255,255,0.4)" font-weight="400" letter-spacing="1.2">WINNIPEG GIVING, SIMPLIFIED</text>
+  </g>
+
+  <!-- === ICON MARK ONLY — 48x48, for app icons / favicons === -->
+  <g transform="translate(280, 12) scale(1.08)">
+    <polygon points="40,6 67.7,22 67.7,54 40,70 12.3,54 12.3,22" fill="#F09810"/>
+    <path d="M40,37 C40,30 29,30 29,37 C29,43.5 40,53 40,56 C40,53 51,43.5 51,37 C51,30 40,30 40,37Z" fill="white"/>
+    <path d="M40,30 C36.5,23 38,17 40,14 C42,17 43.5,23 40,30Z" fill="white"/>
+  </g>
+
+</svg>

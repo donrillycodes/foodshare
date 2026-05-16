@@ -5,18 +5,19 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  StatusBar,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONT, SPACE, RADII } from "../../lib/utils";
 import { signIn, sendPasswordReset } from "../../lib/firebase";
 import { authApi } from "../../lib/api";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "../../store/authStore";
-import { COLORS } from "../../lib/utils";
 import type { User } from "../../types";
 
 export default function LoginScreen() {
@@ -25,6 +26,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -50,10 +52,7 @@ export default function LoginScreen() {
 
       // Step 4 — Block NGO and Admin users
       if (user.role !== "DONOR") {
-        setError(
-          "This app is for donors only. Please use the GivHive web dashboard.",
-        );
-        setLoading(false);
+        router.replace("/(auth)/wrong-role");
         return;
       }
 
@@ -103,91 +102,140 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={styles.header}>
+          {/* Back */}
+          {router.canGoBack() && (
             <TouchableOpacity
+              style={styles.back}
               onPress={() => router.back()}
-              style={styles.backButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Text style={styles.backText}>← Back</Text>
+              <Ionicons name="arrow-back" size={22} color={COLORS.text} />
             </TouchableOpacity>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>G</Text>
+          )}
+
+          {/* Logo mark */}
+          <View style={styles.logoWrap}>
+            <View style={styles.logoMark}>
+              <Ionicons name="leaf" size={22} color={COLORS.primary} />
             </View>
-            <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to your GivHive account</Text>
+          </View>
+
+          {/* Heading */}
+          <View style={styles.headingBlock}>
+            <Text style={styles.heading}>Welcome back</Text>
+            <Text style={styles.subheading}>
+              Sign in to your GivHive account
+            </Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Email */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Email address</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons
+                  name="mail-outline"
+                  size={18}
+                  color={COLORS.textSub}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="your@email.com"
+                  placeholderTextColor={COLORS.textHint}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Password</Text>
+                <TouchableOpacity onPress={handleForgotPassword}>
+                  <Text style={styles.forgotText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.inputWrap}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={18}
+                  color={COLORS.textSub}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor={COLORS.textHint}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword((v) => !v)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={18}
+                    color={COLORS.textSub}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Error message */}
             {error ? (
               <View style={styles.errorBox}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={16}
+                  color={COLORS.error}
+                />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : null}
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Email address</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
-                placeholderTextColor={COLORS.grayMd}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
-                placeholderTextColor={COLORS.grayMd}
-                secureTextEntry
-              />
-            </View>
-
+            {/* Sign in button */}
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.btn, loading && styles.btnDisabled]}
               onPress={handleLogin}
               disabled={loading}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
-              {loading ? (
-                <ActivityIndicator color={COLORS.white} />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+              <Text style={styles.btnText}>
+                {loading ? "Signing in..." : "Sign in"}
+              </Text>
+              {!loading && (
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={COLORS.surface}
+                />
               )}
             </TouchableOpacity>
+          </View>
 
-            <TouchableOpacity
-              onPress={handleForgotPassword}
-              style={styles.forgotPassword}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/register")}
-              style={styles.registerLink}
-            >
-              <Text style={styles.registerLinkText}>
-                Don't have an account?{" "}
-                <Text style={styles.registerLinkBold}>Sign up</Text>
-              </Text>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+              <Text style={styles.footerCta}>Create one</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -201,117 +249,135 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
+  scroll: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingHorizontal: SPACE.xl,
+    paddingBottom: SPACE["3xl"],
   },
-  header: {
-    alignItems: "center",
-    paddingTop: 20,
-    marginBottom: 32,
-  },
-  backButton: {
-    alignSelf: "flex-start",
-    marginBottom: 24,
-    paddingVertical: 4,
-  },
-  backText: {
-    color: COLORS.green,
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  logo: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: COLORS.green,
+  back: {
+    marginTop: SPACE.lg,
+    width: 40,
+    height: 40,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
   },
-  logoText: {
-    color: COLORS.white,
-    fontSize: 24,
-    fontWeight: "bold",
+  logoWrap: {
+    marginTop: SPACE["3xl"],
+    marginBottom: SPACE["2xl"],
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: 6,
+  logoMark: {
+    width: 52,
+    height: 52,
+    borderRadius: RADII.lg,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.gray,
+  headingBlock: {
+    gap: SPACE.sm,
+    marginBottom: SPACE["3xl"],
+  },
+  heading: {
+    fontSize: FONT["3xl"],
+    fontWeight: "800",
+    color: COLORS.text,
+  },
+  subheading: {
+    fontSize: FONT.base,
+    color: COLORS.textSub,
+    lineHeight: 22,
   },
   form: {
-    gap: 16,
+    gap: SPACE.xl,
+    marginBottom: SPACE["3xl"],
   },
-  errorBox: {
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FECACA",
-    borderRadius: 10,
-    padding: 12,
+  fieldGroup: {
+    gap: SPACE.sm,
   },
-  errorText: {
-    color: "#DC2626",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  field: {
-    gap: 6,
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   label: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: COLORS.gray,
+    fontSize: FONT.sm,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  forgotText: {
+    fontSize: FONT.sm,
+    color: COLORS.primary,
+    fontWeight: "600",
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: SPACE.md,
+    height: 52,
+    gap: SPACE.sm,
+  },
+  inputIcon: {
+    flexShrink: 0,
   },
   input: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.grayMd,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: COLORS.black,
+    flex: 1,
+    fontSize: FONT.base,
+    color: COLORS.text,
+    paddingVertical: 0,
   },
-  button: {
-    backgroundColor: COLORS.green,
-    paddingVertical: 16,
-    borderRadius: 14,
+  btn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADII.lg,
+    paddingVertical: SPACE.lg,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    gap: SPACE.sm,
+    marginTop: SPACE.sm,
   },
-  buttonDisabled: {
+  btnDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "600",
+  btnText: {
+    fontSize: FONT.base,
+    fontWeight: "700",
+    color: COLORS.surface,
   },
-  forgotPassword: {
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  footerText: {
+    fontSize: FONT.md,
+    color: COLORS.textSub,
+  },
+  footerCta: {
+    fontSize: FONT.md,
+    color: COLORS.primary,
+    fontWeight: "700",
+  },
+  errorBox: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 4,
+    gap: SPACE.sm,
+    backgroundColor: COLORS.errorLight,
+    borderRadius: RADII.md,
+    padding: SPACE.md,
+    borderWidth: 1,
+    borderColor: COLORS.errorBorder,
   },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: COLORS.green,
-    fontWeight: "500",
-  },
-  registerLink: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  registerLinkText: {
-    fontSize: 14,
-    color: COLORS.gray,
-  },
-  registerLinkBold: {
-    color: COLORS.green,
-    fontWeight: "600",
+  errorText: {
+    fontSize: FONT.sm,
+    color: COLORS.error,
+    flex: 1,
+    lineHeight: 18,
   },
 });

@@ -4,10 +4,10 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Image,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { ngoApi, foodNeedApi } from "../../lib/api";
@@ -33,17 +33,17 @@ export default function NGOProfileScreen() {
   });
 
   const { data: needsData, isLoading: needsLoading } = useQuery({
-  queryKey: ['ngo-needs', ngoData?.slug],
-  queryFn: async () => {
-    const response = await foodNeedApi.getAll({ limit: 20 });
-    const all = response.data.data as PaginatedResponse<FoodNeed>;
-    return {
-      ...all,
-      items: all.items.filter((n) => n.ngo.id === ngoData!.id),
-    };
-  },
-  enabled: !!ngoData?.id,
-});
+    queryKey: ["ngo-needs", ngoData?.slug],
+    queryFn: async () => {
+      const response = await foodNeedApi.getAll({ limit: 20 });
+      const all = response.data.data as PaginatedResponse<FoodNeed>;
+      return {
+        ...all,
+        items: all.items.filter((n) => n.ngo.id === ngoData!.id),
+      };
+    },
+    enabled: !!ngoData?.id,
+  });
 
   const ngo = ngoData;
   const needs = needsData?.items ?? [];
@@ -72,7 +72,6 @@ export default function NGOProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -83,7 +82,7 @@ export default function NGOProfileScreen() {
           </TouchableOpacity>
         </View>
 
-                {/* Cover image */}
+        {/* Cover image */}
         {ngo.coverUrl && (
           <Image
             source={{ uri: ngo.coverUrl }}
@@ -394,14 +393,14 @@ const styles = StyleSheet.create({
     height: 40,
   },
   logoImage: {
-  width: 80,
-  height: 80,
-  borderRadius: 40,
-  marginBottom: 12,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
   },
   coverImage: {
-  width: '100%',
-  height: 180,
-  backgroundColor: COLORS.grayLt,
+    width: "100%",
+    height: 180,
+    backgroundColor: COLORS.grayLt,
   },
 });

@@ -4,29 +4,67 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { donationApi, pledgeApi } from "../../lib/api";
 import {
   COLORS,
+  FONT,
+  SPACE,
+  RADII,
   formatCurrency,
   formatDate,
   formatStatus,
 } from "../../lib/utils";
 import type { Donation, FoodPledge, PaginatedResponse } from "../../types";
-import { useLocalSearchParams } from "expo-router";
-import { useNavigationStore } from '../../store/authStore';
-import { useEffect } from 'react';
+import { useNavigationStore } from "../../store/authStore";
 
 type Tab = "donations" | "pledges";
 
+function statusColor(status: string): string {
+  switch (status) {
+    case "COMPLETED":
+    case "FULFILLED":
+      return COLORS.success;
+    case "PENDING":
+    case "CONFIRMED":
+      return COLORS.warning;
+    case "FAILED":
+    case "CANCELLED":
+    case "EXPIRED":
+      return COLORS.error;
+    default:
+      return COLORS.textSub;
+  }
+}
+
+function EmptyState({
+  icon,
+  title,
+  message,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  message: string;
+}) {
+  return (
+    <View style={styles.emptyState}>
+      <View style={styles.emptyIconWrap}>
+        <Ionicons name={icon} size={32} color={COLORS.primary} />
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyMessage}>{message}</Text>
+    </View>
+  );
+}
+
 export default function ActivityScreen() {
-  const { tab } = useLocalSearchParams<{ tab?: Tab }>();
-  const [activeTab, setActiveTab] = useState<Tab>(tab ?? "donations");
   const { activityTab } = useNavigationStore();
+  const [activeTab, setActiveTab] = useState<Tab>(activityTab);
 
   useEffect(() => {
     setActiveTab(activityTab);
@@ -35,16 +73,16 @@ export default function ActivityScreen() {
   const { data: donationsData, isLoading: donationsLoading } = useQuery({
     queryKey: ["my-donations"],
     queryFn: async () => {
-      const response = await donationApi.getMyDonations();
-      return response.data.data as PaginatedResponse<Donation>;
+      const res = await donationApi.getMyDonations();
+      return res.data.data as PaginatedResponse<Donation>;
     },
   });
 
   const { data: pledgesData, isLoading: pledgesLoading } = useQuery({
     queryKey: ["my-pledges"],
     queryFn: async () => {
-      const response = await pledgeApi.getMyPledges();
-      return response.data.data as PaginatedResponse<FoodPledge>;
+      const res = await pledgeApi.getMyPledges();
+      return res.data.data as PaginatedResponse<FoodPledge>;
     },
     enabled: activeTab === "pledges",
   });
@@ -52,92 +90,70 @@ export default function ActivityScreen() {
   const donations = donationsData?.items ?? [];
   const pledges = pledgesData?.items ?? [];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-      case "FULFILLED":
-        return "#16A34A";
-      case "PENDING":
-      case "CONFIRMED":
-        return "#D97706";
-      case "FAILED":
-      case "CANCELLED":
-      case "EXPIRED":
-        return "#DC2626";
-      default:
-        return COLORS.gray;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Activity</Text>
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "donations" && styles.tabActive]}
+            onPress={() => setActiveTab("donations")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "donations" && styles.tabTextActive,
+              ]}
+            >
+              Donations
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "pledges" && styles.tabActive]}
+            onPress={() => setActiveTab("pledges")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "pledges" && styles.tabTextActive,
+              ]}
+            >
+              Food Pledges
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "donations" && styles.activeTab]}
-          onPress={() => setActiveTab("donations")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "donations" && styles.activeTabText,
-            ]}
-          >
-            Donations
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "pledges" && styles.activeTab]}
-          onPress={() => setActiveTab("pledges")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "pledges" && styles.activeTabText,
-            ]}
-          >
-            Food Pledges
-          </Text>
-        </TouchableOpacity>
-      </View>
-
+      {/* Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
       >
         {activeTab === "donations" ? (
           donationsLoading ? (
-            <ActivityIndicator color={COLORS.green} style={styles.loader} />
+            <ActivityIndicator color={COLORS.primary} style={styles.loader} />
           ) : donations.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>❤️</Text>
-              <Text style={styles.emptyTitle}>No donations yet</Text>
-              <Text style={styles.emptyMessage}>
-                Your donation history will appear here
-              </Text>
-            </View>
+            <EmptyState
+              icon="heart-outline"
+              title="No donations yet"
+              message="Your donation history will appear here once you make your first contribution."
+            />
           ) : (
             donations.map((donation) => (
               <View key={donation.id} style={styles.card}>
-                <View style={styles.cardLeft}>
-                  <View style={styles.ngoLogo}>
-                    <Text style={styles.ngoLogoText}>
-                      {donation.ngo.name.charAt(0)}
-                    </Text>
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {donation.ngo.name}
-                    </Text>
-                    <Text style={styles.cardDate}>
-                      {formatDate(donation.createdAt)}
-                    </Text>
-                  </View>
+                <View style={styles.cardAvatar}>
+                  <Text style={styles.cardAvatarText}>
+                    {donation.ngo.name.charAt(0)}
+                  </Text>
+                </View>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {donation.ngo.name}
+                  </Text>
+                  <Text style={styles.cardDate}>
+                    {formatDate(donation.createdAt)}
+                  </Text>
                 </View>
                 <View style={styles.cardRight}>
                   <Text style={styles.amount}>
@@ -146,7 +162,7 @@ export default function ActivityScreen() {
                   <Text
                     style={[
                       styles.status,
-                      { color: getStatusColor(donation.status) },
+                      { color: statusColor(donation.status) },
                     ]}
                   >
                     {formatStatus(donation.status)}
@@ -156,41 +172,38 @@ export default function ActivityScreen() {
             ))
           )
         ) : pledgesLoading ? (
-          <ActivityIndicator color={COLORS.green} style={styles.loader} />
+          <ActivityIndicator color={COLORS.primary} style={styles.loader} />
         ) : pledges.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📦</Text>
-            <Text style={styles.emptyTitle}>No pledges yet</Text>
-            <Text style={styles.emptyMessage}>
-              Your food pledge history will appear here
-            </Text>
-          </View>
+          <EmptyState
+            icon="cube-outline"
+            title="No pledges yet"
+            message="Your food pledge history will appear here once you start pledging."
+          />
         ) : (
           pledges.map((pledge) => (
             <View key={pledge.id} style={styles.card}>
-              <View style={styles.cardLeft}>
-                <View style={styles.pledgeIcon}>
-                  <Text style={styles.pledgeIconText}>📦</Text>
-                </View>
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {pledge.foodNeed?.title ?? 'Food Pledge'}
-                  </Text>
-                  <Text style={styles.cardDate}>
-                    {pledge.quantityPledged} {pledge.foodNeed?.unit} ·{' '}
-                    {pledge.ngo?.name ?? 'NGO'}
-                  </Text>
-                  <Text style={styles.cardDate}>
-                    {formatDate(pledge.createdAt)}
-                  </Text>
-                </View>
+              <View style={[styles.cardAvatar, styles.pledgeAvatar]}>
+                <Ionicons
+                  name="cube-outline"
+                  size={20}
+                  color={COLORS.warning}
+                />
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {pledge.foodNeed?.title ?? "Food Pledge"}
+                </Text>
+                <Text style={styles.cardDate}>
+                  {pledge.quantityPledged} {pledge.foodNeed?.unit} ·{" "}
+                  {pledge.ngo?.name ?? "NGO"}
+                </Text>
+                <Text style={styles.cardDate}>
+                  {formatDate(pledge.createdAt)}
+                </Text>
               </View>
               <View style={styles.cardRight}>
                 <Text
-                  style={[
-                    styles.status,
-                    { color: getStatusColor(pledge.status) },
-                  ]}
+                  style={[styles.status, { color: statusColor(pledge.status) }]}
                 >
                   {formatStatus(pledge.status)}
                 </Text>
@@ -198,7 +211,7 @@ export default function ActivityScreen() {
             </View>
           ))
         )}
-        <View style={styles.bottomPadding} />
+        <View style={styles.bottomPad} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -210,136 +223,129 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingHorizontal: SPACE.xl,
+    paddingTop: SPACE.xl,
+    paddingBottom: SPACE.md,
+    gap: SPACE.md,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.black,
+    fontSize: FONT["2xl"],
+    fontWeight: "800",
+    color: COLORS.text,
   },
   tabs: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 8,
-    marginBottom: 16,
+    gap: SPACE.sm,
   },
   tab: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACE.xl,
+    paddingVertical: SPACE.sm,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
+    borderColor: COLORS.border,
   },
-  activeTab: {
-    backgroundColor: COLORS.green,
-    borderColor: COLORS.green,
+  tabActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: COLORS.gray,
+    fontSize: FONT.md,
+    fontWeight: "600",
+    color: COLORS.textSub,
   },
-  activeTabText: {
-    color: COLORS.white,
+  tabTextActive: {
+    color: COLORS.surface,
   },
   list: {
-    paddingHorizontal: 20,
-    gap: 10,
+    paddingHorizontal: SPACE.xl,
+    paddingTop: SPACE.sm,
+    gap: SPACE.sm,
   },
   loader: {
-    marginTop: 40,
+    marginTop: SPACE["3xl"],
   },
   emptyState: {
     alignItems: "center",
-    paddingTop: 60,
-    gap: 8,
+    paddingTop: SPACE["3xl"] * 2,
+    gap: SPACE.md,
   },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: SPACE.sm,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: COLORS.black,
+    fontSize: FONT.lg,
+    fontWeight: "700",
+    color: COLORS.text,
   },
   emptyMessage: {
-    fontSize: 13,
-    color: COLORS.gray,
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
     textAlign: "center",
+    lineHeight: 20,
+    paddingHorizontal: SPACE.xl,
   },
   card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
-    padding: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  cardLeft: {
+    borderColor: COLORS.border,
+    padding: SPACE.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    flex: 1,
+    gap: SPACE.md,
   },
-  ngoLogo: {
+  cardAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.greenLt,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primaryLight,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  ngoLogoText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.green,
+  pledgeAvatar: {
+    backgroundColor: COLORS.warningLight,
   },
-  pledgeIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#FEF3C7",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  pledgeIconText: {
-    fontSize: 20,
+  cardAvatarText: {
+    fontSize: FONT.lg,
+    fontWeight: "800",
+    color: COLORS.primary,
   },
   cardInfo: {
     flex: 1,
     gap: 2,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: FONT.md,
     fontWeight: "600",
-    color: COLORS.black,
+    color: COLORS.text,
   },
   cardDate: {
-    fontSize: 12,
-    color: COLORS.gray,
+    fontSize: FONT.xs,
+    color: COLORS.textSub,
   },
   cardRight: {
     alignItems: "flex-end",
     gap: 4,
+    flexShrink: 0,
   },
   amount: {
-    fontSize: 15,
+    fontSize: FONT.base,
     fontWeight: "700",
-    color: COLORS.black,
+    color: COLORS.text,
   },
   status: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: FONT.xs,
+    fontWeight: "600",
   },
-  bottomPadding: {
-    height: 20,
+  bottomPad: {
+    height: SPACE.xl,
   },
 });

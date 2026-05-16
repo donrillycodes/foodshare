@@ -4,26 +4,90 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../../store/authStore";
 import { ngoApi, foodNeedApi, updateApi } from "../../lib/api";
 import {
   COLORS,
-  formatCurrency,
+  FONT,
+  SPACE,
+  RADII,
   formatRelativeTime,
   truncate,
   formatCategory,
+  getProgress,
 } from "../../lib/utils";
 import type { NGO, FoodNeed, NGOUpdate, PaginatedResponse } from "../../types";
+
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+interface SectionHeaderProps {
+  title: string;
+  onSeeAll?: () => void;
+}
+
+function SectionHeader({ title, onSeeAll }: SectionHeaderProps) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {onSeeAll && (
+        <TouchableOpacity onPress={onSeeAll}>
+          <Text style={styles.seeAll}>See all</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+interface QuickActionProps {
+  icon: IoniconName;
+  label: string;
+  sub: string;
+  iconBg: string;
+  iconColor: string;
+  onPress: () => void;
+}
+
+function QuickAction({
+  icon,
+  label,
+  sub,
+  iconBg,
+  iconColor,
+  onPress,
+}: QuickActionProps) {
+  return (
+    <TouchableOpacity
+      style={styles.quickAction}
+      onPress={onPress}
+      activeOpacity={0.75}
+    >
+      <View style={[styles.quickActionIconWrap, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={22} color={iconColor} />
+      </View>
+      <View>
+        <Text style={styles.quickActionLabel}>{label}</Text>
+        <Text style={styles.quickActionSub}>{sub}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ── Main screen ────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
     data: ngosData,
@@ -32,8 +96,8 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["featured-ngos"],
     queryFn: async () => {
-      const response = await ngoApi.getAll({ limit: 5 });
-      return response.data.data as PaginatedResponse<NGO>;
+      const res = await ngoApi.getAll({ limit: 5 });
+      return res.data.data as PaginatedResponse<NGO>;
     },
   });
 
@@ -44,8 +108,8 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["urgent-needs"],
     queryFn: async () => {
-      const response = await foodNeedApi.getAll({ isUrgent: true, limit: 3 });
-      return response.data.data as PaginatedResponse<FoodNeed>;
+      const res = await foodNeedApi.getAll({ isUrgent: true, limit: 3 });
+      return res.data.data as PaginatedResponse<FoodNeed>;
     },
   });
 
@@ -56,20 +120,24 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["recent-updates"],
     queryFn: async () => {
-      const response = await updateApi.getAll({ limit: 5 });
-      return response.data.data as PaginatedResponse<NGOUpdate>;
+      const res = await updateApi.getAll({ limit: 5 });
+      return res.data.data as PaginatedResponse<NGOUpdate>;
     },
   });
 
-  const isRefreshing = false;
-
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     await Promise.all([refetchNgos(), refetchNeeds(), refetchUpdates()]);
+    setIsRefreshing(false);
   };
 
   const ngos = ngosData?.items ?? [];
   const urgentNeeds = needsData?.items ?? [];
   const updates = updatesData?.items ?? [];
+
+  // Derive a simple aggregate for the impact card
+  const totalNGOs = ngosData?.meta?.total ?? 0;
+  const totalNeeds = needsData?.meta?.total ?? 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,123 +147,122 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={COLORS.green}
+            tintColor={COLORS.primary}
           />
         }
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello, {user?.firstName} 👋</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={styles.headerSub}>
               Make a difference in Winnipeg today
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.notificationButton}
+            style={styles.notifBtn}
             onPress={() => router.push("/notifications")}
           >
-            <Text style={styles.notificationEmoji}>🔔</Text>
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color={COLORS.text}
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Quick actions */}
+        {/* ── Impact card ── */}
+        <View style={styles.impactCard}>
+          <View>
+            <Text style={styles.impactLabel}>Active in Winnipeg</Text>
+            <Text style={styles.impactNumber}>
+              {totalNGOs > 0 ? totalNGOs : "—"}
+            </Text>
+            <Text style={styles.impactUnit}>verified charities</Text>
+          </View>
+          <View style={styles.impactDivider} />
+          <View>
+            <Text style={styles.impactLabel}>Open right now</Text>
+            <Text style={styles.impactNumber}>
+              {totalNeeds > 0 ? totalNeeds : "—"}
+            </Text>
+            <Text style={styles.impactUnit}>food requests</Text>
+          </View>
+          <View style={styles.impactCta}>
+            <Ionicons name="leaf" size={14} color={COLORS.primaryLight} />
+            <Text style={styles.impactCtaText}>GivHive</Text>
+          </View>
+        </View>
+
+        {/* ── Quick actions ── */}
         <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickAction}
+          <QuickAction
+            icon="heart-outline"
+            label="Donate"
+            sub="Cash gift"
+            iconBg={COLORS.accentLight}
+            iconColor={COLORS.accent}
             onPress={() => router.push("/(tabs)/discover")}
-            activeOpacity={0.8}
-          >
-            <View
-              style={[styles.quickActionIcon, { backgroundColor: "#E8F5EE" }]}
-            >
-              <Text style={styles.quickActionEmoji}>❤️</Text>
-            </View>
-            <Text style={styles.quickActionLabel}>Donate</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAction}
+          />
+          <QuickAction
+            icon="cube-outline"
+            label="Pledge Food"
+            sub="Food items"
+            iconBg={COLORS.primaryLight}
+            iconColor={COLORS.primary}
             onPress={() => router.push("/(tabs)/discover")}
-            activeOpacity={0.8}
-          >
-            <View
-              style={[styles.quickActionIcon, { backgroundColor: "#FEF3C7" }]}
-            >
-              <Text style={styles.quickActionEmoji}>📦</Text>
-            </View>
-            <Text style={styles.quickActionLabel}>Pledge Food</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAction}
+          />
+          <QuickAction
+            icon="receipt-outline"
+            label="My Activity"
+            sub="History"
+            iconBg="#EEF2FF"
+            iconColor={COLORS.blue}
             onPress={() => router.push("/(tabs)/activity")}
-            activeOpacity={0.8}
-          >
-            <View
-              style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}
-            >
-              <Text style={styles.quickActionEmoji}>📋</Text>
-            </View>
-            <Text style={styles.quickActionLabel}>My Activity</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAction}
+          />
+          <QuickAction
+            icon="business-outline"
+            label="NGOs"
+            sub="Browse all"
+            iconBg={COLORS.warningLight}
+            iconColor={COLORS.warning}
             onPress={() => router.push("/(tabs)/discover")}
-            activeOpacity={0.8}
-          >
-            <View
-              style={[styles.quickActionIcon, { backgroundColor: "#F5F3FF" }]}
-            >
-              <Text style={styles.quickActionEmoji}>🏢</Text>
-            </View>
-            <Text style={styles.quickActionLabel}>NGOs</Text>
-          </TouchableOpacity>
+          />
         </View>
 
-        {/* Urgent needs */}
-        {urgentNeeds.length > 0 && (
+        {/* ── Urgent needs ── */}
+        {(urgentNeeds.length > 0 || needsLoading) && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🚨 Urgent Needs</Text>
-              <TouchableOpacity
-                onPress={() => router.push("/discover?tab=needs")}
-              >
-                <Text style={styles.seeAll}>See all</Text>
-              </TouchableOpacity>
-            </View>
-
+            <SectionHeader
+              title="Urgent needs"
+              onSeeAll={() => router.push("/discover?tab=needs" as any)}
+            />
             {needsLoading ? (
-              <ActivityIndicator color={COLORS.green} />
+              <ActivityIndicator color={COLORS.primary} style={styles.loader} />
             ) : (
-              urgentNeeds.map((need) => (
-                <TouchableOpacity
-                  key={need.id}
-                  style={styles.urgentCard}
-                  onPress={() => router.push(`/food-need/${need.id}` as any)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.urgentCardContent}>
+              urgentNeeds.map((need) => {
+                const pct = getProgress(
+                  need.quantityFulfilled,
+                  need.quantityRequired,
+                );
+                return (
+                  <TouchableOpacity
+                    key={need.id}
+                    style={styles.urgentCard}
+                    onPress={() => router.push(`/food-need/${need.id}` as any)}
+                    activeOpacity={0.75}
+                  >
                     <View style={styles.urgentBadge}>
                       <Text style={styles.urgentBadgeText}>URGENT</Text>
                     </View>
                     <Text style={styles.urgentTitle}>{need.title}</Text>
-                    <Text style={styles.urgentNgo}>{need.ngo.name}</Text>
-                    <View style={styles.progressContainer}>
+                    <Text style={styles.urgentNgo}>
+                      {need.ngo.name} · {need.ngo.city}
+                    </Text>
+                    <View style={styles.progressRow}>
                       <View style={styles.progressBar}>
                         <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              width: `${Math.min(
-                                (need.quantityFulfilled /
-                                  need.quantityRequired) *
-                                  100,
-                                100,
-                              )}%`,
-                            },
-                          ]}
+                          style={[styles.progressFill, { width: `${pct}%` }]}
                         />
                       </View>
                       <Text style={styles.progressText}>
@@ -203,39 +270,45 @@ export default function HomeScreen() {
                         {need.unit}
                       </Text>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))
+                    <View style={styles.urgentArrow}>
+                      <Ionicons
+                        name="arrow-forward"
+                        size={14}
+                        color={COLORS.surface}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
             )}
           </View>
         )}
 
-        {/* Featured NGOs */}
+        {/* ── Featured NGOs ── */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🏢 Featured NGOs</Text>
-            <TouchableOpacity onPress={() => router.push("/discover")}>
-              <Text style={styles.seeAll}>See all</Text>
-            </TouchableOpacity>
-          </View>
-
+          <SectionHeader
+            title="Featured NGOs"
+            onSeeAll={() => router.push("/(tabs)/discover")}
+          />
           {ngosLoading ? (
-            <ActivityIndicator color={COLORS.green} />
+            <ActivityIndicator color={COLORS.primary} style={styles.loader} />
           ) : (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
+              contentContainerStyle={styles.ngoRow}
             >
               {ngos.map((ngo) => (
                 <TouchableOpacity
                   key={ngo.id}
                   style={styles.ngoCard}
                   onPress={() => router.push(`/ngo/${ngo.slug}` as any)}
-                  activeOpacity={0.8}
+                  activeOpacity={0.75}
                 >
-                  <View style={styles.ngoLogo}>
-                    <Text style={styles.ngoLogoText}>{ngo.name.charAt(0)}</Text>
+                  <View style={styles.ngoAvatar}>
+                    <Text style={styles.ngoAvatarText}>
+                      {ngo.name.charAt(0)}
+                    </Text>
                   </View>
                   <Text style={styles.ngoName} numberOfLines={2}>
                     {ngo.name}
@@ -243,301 +316,384 @@ export default function HomeScreen() {
                   <Text style={styles.ngoCategory}>
                     {formatCategory(ngo.category)}
                   </Text>
-                  <Text style={styles.ngoCity}>{ngo.city}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           )}
         </View>
 
-        {/* Recent updates */}
+        {/* ── Latest updates ── */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>📰 Latest Updates</Text>
-          </View>
-
+          <SectionHeader title="Latest updates" />
           {updatesLoading ? (
-            <ActivityIndicator color={COLORS.green} />
+            <ActivityIndicator color={COLORS.primary} style={styles.loader} />
+          ) : updates.length === 0 ? (
+            <Text style={styles.emptyText}>No updates yet</Text>
           ) : (
             updates.map((update) => (
               <TouchableOpacity
                 key={update.id}
                 style={styles.updateCard}
                 onPress={() => router.push(`/update/${update.id}` as any)}
-                activeOpacity={0.8}
+                activeOpacity={0.75}
               >
-                <View style={styles.updateContent}>
-                  <View style={styles.updateHeader}>
-                    <View style={styles.updateNgoLogo}>
-                      <Text style={styles.updateNgoLogoText}>
-                        {update.ngo.name.charAt(0)}
-                      </Text>
-                    </View>
-                    <View style={styles.updateMeta}>
-                      <Text style={styles.updateNgoName}>
-                        {update.ngo.name}
-                      </Text>
-                      <Text style={styles.updateTime}>
-                        {formatRelativeTime(
-                          update.publishedAt ?? update.createdAt,
-                        )}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.updateTitle}>{update.title}</Text>
-                  {update.summary && (
-                    <Text style={styles.updateSummary}>
-                      {truncate(update.summary, 100)}
+                <View style={styles.updateHeader}>
+                  <View style={styles.updateAvatar}>
+                    <Text style={styles.updateAvatarText}>
+                      {update.ngo.name.charAt(0)}
                     </Text>
-                  )}
+                  </View>
+                  <View style={styles.updateMeta}>
+                    <Text style={styles.updateNgo}>{update.ngo.name}</Text>
+                    <Text style={styles.updateTime}>
+                      {formatRelativeTime(
+                        update.publishedAt ?? update.createdAt,
+                      )}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={COLORS.textHint}
+                  />
                 </View>
+                <Text style={styles.updateTitle}>{update.title}</Text>
+                {update.summary && (
+                  <Text style={styles.updateSummary}>
+                    {truncate(update.summary, 110)}
+                  </Text>
+                )}
               </TouchableOpacity>
             ))
           )}
         </View>
 
-        <View style={styles.bottomPadding} />
+        <View style={styles.bottomPad} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: SPACE.xl,
+    paddingTop: SPACE.xl,
+    paddingBottom: SPACE.lg,
   },
   greeting: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: COLORS.black,
+    fontSize: FONT.xl,
+    fontWeight: "800",
+    color: COLORS.text,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    color: COLORS.gray,
+  headerSub: {
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
     marginTop: 2,
   },
-  notificationButton: {
+  notifBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.white,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
+    borderColor: COLORS.border,
   },
-  notificationEmoji: {
-    fontSize: 18,
+
+  // Impact card
+  impactCard: {
+    marginHorizontal: SPACE.xl,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADII.xl,
+    padding: SPACE.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.xl,
+    marginBottom: SPACE.xl,
+    position: "relative",
+    overflow: "hidden",
   },
+  impactLabel: {
+    fontSize: FONT.xs,
+    color: "rgba(255,255,255,0.6)",
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  impactNumber: {
+    fontSize: FONT["3xl"],
+    fontWeight: "900",
+    color: COLORS.surface,
+    lineHeight: 32,
+  },
+  impactUnit: {
+    fontSize: FONT.xs,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 2,
+  },
+  impactDivider: {
+    width: 1,
+    height: 48,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  impactCta: {
+    position: "absolute",
+    bottom: SPACE.md,
+    right: SPACE.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    opacity: 0.4,
+  },
+  impactCtaText: {
+    fontSize: FONT.xs,
+    color: COLORS.surface,
+    fontWeight: "600",
+  },
+
+  // Quick actions
   quickActions: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 24,
+    flexWrap: "wrap",
+    paddingHorizontal: SPACE.xl,
+    gap: SPACE.md,
+    marginBottom: SPACE.xl,
   },
   quickAction: {
-    flex: 1,
+    width: "47%",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
+    padding: SPACE.lg,
+    flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: SPACE.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+  quickActionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: RADII.md,
     alignItems: "center",
     justifyContent: "center",
-  },
-  quickActionEmoji: {
-    fontSize: 24,
+    flexShrink: 0,
   },
   quickActionLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: COLORS.gray,
-    textAlign: "center",
+    fontSize: FONT.md,
+    fontWeight: "700",
+    color: COLORS.text,
   },
+  quickActionSub: {
+    fontSize: FONT.xs,
+    color: COLORS.textSub,
+    marginTop: 1,
+  },
+
+  // Sections
   section: {
-    marginBottom: 24,
+    marginBottom: SPACE.xl,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    paddingHorizontal: SPACE.xl,
+    marginBottom: SPACE.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: FONT.base,
     fontWeight: "700",
-    color: COLORS.black,
+    color: COLORS.text,
   },
   seeAll: {
-    fontSize: 13,
-    color: COLORS.green,
-    fontWeight: "500",
+    fontSize: FONT.sm,
+    color: COLORS.primary,
+    fontWeight: "600",
   },
+  loader: {
+    marginTop: SPACE.xl,
+  },
+  emptyText: {
+    paddingHorizontal: SPACE.xl,
+    color: COLORS.textSub,
+    fontSize: FONT.sm,
+  },
+
+  // Urgent needs
   urgentCard: {
-    marginHorizontal: 20,
-    marginBottom: 10,
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
+    marginHorizontal: SPACE.xl,
+    marginBottom: SPACE.sm,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
+    padding: SPACE.lg,
     borderWidth: 1,
-    borderColor: "#FECACA",
-    overflow: "hidden",
-  },
-  urgentCardContent: {
-    padding: 16,
+    borderColor: COLORS.border,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.accent,
+    position: "relative",
   },
   urgentBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#FEE2E2",
-    paddingHorizontal: 8,
+    backgroundColor: COLORS.accentLight,
+    paddingHorizontal: SPACE.sm,
     paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 8,
+    borderRadius: RADII.sm,
+    marginBottom: SPACE.sm,
   },
   urgentBadgeText: {
-    color: "#DC2626",
-    fontSize: 10,
+    fontSize: FONT.xs,
     fontWeight: "700",
+    color: COLORS.accent,
     letterSpacing: 0.5,
   },
   urgentTitle: {
-    fontSize: 15,
+    fontSize: FONT.base,
     fontWeight: "600",
-    color: COLORS.black,
+    color: COLORS.text,
     marginBottom: 4,
+    paddingRight: SPACE["2xl"],
   },
   urgentNgo: {
-    fontSize: 12,
-    color: COLORS.gray,
-    marginBottom: 10,
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
+    marginBottom: SPACE.md,
   },
-  progressContainer: {
-    gap: 6,
+  progressRow: {
+    gap: SPACE.xs,
   },
   progressBar: {
-    height: 6,
-    backgroundColor: COLORS.grayLt,
-    borderRadius: 3,
+    height: 5,
+    backgroundColor: COLORS.surfaceAlt,
+    borderRadius: RADII.full,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: COLORS.green,
-    borderRadius: 3,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADII.full,
   },
   progressText: {
-    fontSize: 11,
-    color: COLORS.gray,
+    fontSize: FONT.xs,
+    color: COLORS.textSub,
   },
-  horizontalList: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  ngoCard: {
-    width: 140,
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: COLORS.grayMd,
-    alignItems: "center",
-    gap: 6,
-  },
-  ngoLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.greenLt,
+  urgentArrow: {
+    position: "absolute",
+    top: SPACE.lg,
+    right: SPACE.lg,
+    width: 28,
+    height: 28,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
-  ngoLogoText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.green,
+
+  // NGO cards
+  ngoRow: {
+    paddingHorizontal: SPACE.xl,
+    gap: SPACE.md,
+  },
+  ngoCard: {
+    width: 130,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
+    padding: SPACE.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    gap: SPACE.sm,
+  },
+  ngoAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ngoAvatarText: {
+    fontSize: FONT.lg,
+    fontWeight: "800",
+    color: COLORS.primary,
   },
   ngoName: {
-    fontSize: 13,
+    fontSize: FONT.sm,
     fontWeight: "600",
-    color: COLORS.black,
+    color: COLORS.text,
     textAlign: "center",
   },
   ngoCategory: {
-    fontSize: 11,
-    color: COLORS.green,
+    fontSize: FONT.xs,
+    color: COLORS.primary,
     fontWeight: "500",
+    textAlign: "center",
   },
-  ngoCity: {
-    fontSize: 11,
-    color: COLORS.gray,
-  },
+
+  // Update cards
   updateCard: {
-    marginHorizontal: 20,
-    marginBottom: 10,
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
+    marginHorizontal: SPACE.xl,
+    marginBottom: SPACE.sm,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.lg,
+    padding: SPACE.lg,
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
-    overflow: "hidden",
-  },
-  updateContent: {
-    padding: 16,
+    borderColor: COLORS.border,
+    gap: SPACE.sm,
   },
   updateHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 10,
+    gap: SPACE.md,
   },
-  updateNgoLogo: {
+  updateAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.greenLt,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primaryLight,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  updateNgoLogoText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: COLORS.green,
+  updateAvatarText: {
+    fontSize: FONT.md,
+    fontWeight: "800",
+    color: COLORS.primary,
   },
   updateMeta: {
     flex: 1,
   },
-  updateNgoName: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.black,
+  updateNgo: {
+    fontSize: FONT.sm,
+    fontWeight: "700",
+    color: COLORS.text,
   },
   updateTime: {
-    fontSize: 11,
-    color: COLORS.gray,
+    fontSize: FONT.xs,
+    color: COLORS.textSub,
     marginTop: 1,
   },
   updateTitle: {
-    fontSize: 14,
+    fontSize: FONT.md,
     fontWeight: "600",
-    color: COLORS.black,
-    marginBottom: 4,
+    color: COLORS.text,
   },
   updateSummary: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 18,
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
+    lineHeight: 19,
   },
-  bottomPadding: {
-    height: 20,
+
+  bottomPad: {
+    height: SPACE.xl,
   },
 });

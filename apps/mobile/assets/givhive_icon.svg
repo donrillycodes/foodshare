@@ -1,0 +1,30 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
+
+  <!--
+    GivHive — Icon mark only
+    Use for: app icon, favicon, avatar, badge, social profile
+    Hex orientation: pointy-top (vertex at top and bottom)
+    Primary colour: #F09810 (orange-amber)
+  -->
+
+  <!-- Outer hex: cx=60, cy=60, circumradius=54 -->
+  <!-- Vertices at angles: -90°, -30°, 30°, 90°, 150°, 210° -->
+  <!-- top(60,6) tr(106.7,33) br(106.7,87) bot(60,114) bl(13.3,87) tl(13.3,33) -->
+  <polygon
+    points="60,6 106.7,33 106.7,87 60,114 13.3,87 13.3,33"
+    fill="#F09810"
+  />
+
+  <!-- Heart: centered at (60,65), width ~42, top indentation at y≈50 -->
+  <path
+    d="M60,55 C60,45 39,45 39,55 C39,65 60,81 60,84 C60,81 81,65 81,55 C81,45 60,45 60,55Z"
+    fill="white"
+  />
+
+  <!-- Leaf / sprout: from heart's top indentation (60,55) up to (60,36) -->
+  <path
+    d="M60,55 C55,46 57,38 60,34 C63,38 65,46 60,55Z"
+    fill="white"
+  />
+
+</svg>

@@ -4,14 +4,14 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -103,215 +103,222 @@ export default function FoodNeedScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Hero */}
-        <View style={styles.hero}>
-          <View style={styles.iconContainer}>
-            <Text style={styles.icon}>📦</Text>
-          </View>
-
-          <View style={styles.badges}>
-            {need.isUrgent && (
-              <View style={styles.urgentBadge}>
-                <Text style={styles.urgentText}>🚨 URGENT</Text>
-              </View>
-            )}
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>
-                {formatCategory(need.itemCategory)}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.title}>{need.title}</Text>
-          <Text style={styles.ngoName}>{need.ngo.name}</Text>
-        </View>
-
-        {/* Progress */}
-        <View style={styles.section}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.sectionTitle}>Progress</Text>
-            <Text style={styles.progressPercent}>{progress}%</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
-          </View>
-          <View style={styles.progressStats}>
-            <Text style={styles.progressStat}>
-              <Text style={styles.progressStatBold}>
-                {need.quantityFulfilled}
-              </Text>{" "}
-              {need.unit} pledged
-            </Text>
-            <Text style={styles.progressStat}>
-              <Text style={styles.progressStatBold}>{remaining}</Text>{" "}
-              {need.unit} remaining
-            </Text>
-          </View>
-        </View>
-
-        {/* Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Details</Text>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Item</Text>
-            <Text style={styles.detailValue}>{need.itemName}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Quantity needed</Text>
-            <Text style={styles.detailValue}>
-              {need.quantityRequired} {need.unit}
-            </Text>
-          </View>
-          {need.deadline && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Deadline</Text>
-              <Text style={styles.detailValue}>
-                {formatDate(need.deadline)}
-              </Text>
-            </View>
-          )}
-          {need.dropOffAddress && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Drop off</Text>
-              <Text style={styles.detailValue}>{need.dropOffAddress}</Text>
-            </View>
-          )}
-          {need.dropOffInstructions && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Instructions</Text>
-              <Text style={styles.detailValue}>{need.dropOffInstructions}</Text>
-            </View>
-          )}
-          {need.description && (
-            <View
-              style={[styles.detailRow, { flexDirection: "column", gap: 4 }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
             >
-              <Text style={styles.detailLabel}>Description</Text>
-              <Text style={styles.detailValue}>{need.description}</Text>
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>📦</Text>
             </View>
-          )}
-        </View>
 
-        {/* Pledge form */}
-        {need.status === "OPEN" && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Make a Pledge</Text>
-
-            {!showPledgeForm ? (
-              <TouchableOpacity
-                style={styles.pledgeButton}
-                onPress={() => setShowPledgeForm(true)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.pledgeButtonText}>
-                  📦 Pledge Food Items
+            <View style={styles.badges}>
+              {need.isUrgent && (
+                <View style={styles.urgentBadge}>
+                  <Text style={styles.urgentText}>🚨 URGENT</Text>
+                </View>
+              )}
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryText}>
+                  {formatCategory(need.itemCategory)}
                 </Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.pledgeForm}>
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>
-                    Quantity ({need.unit}){" "}
-                    <Text style={styles.required}>*</Text>
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={quantity}
-                    onChangeText={setQuantity}
-                    placeholder={`Max ${remaining} ${need.unit}`}
-                    placeholderTextColor={COLORS.grayMd}
-                    keyboardType="numeric"
-                  />
-                </View>
+              </View>
+            </View>
 
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Planned drop off date</Text>
-                  <TouchableOpacity
-                    style={styles.input}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Text style={{ color: dropOffDate ? COLORS.black : COLORS.grayMd, fontSize: 14 }}>
-                      {dropOffDate || 'Select a date'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={dropOffDate ? new Date(dropOffDate) : new Date()}
-                      mode="date"
-                      minimumDate={new Date()}
-                      onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) {
-                          setDropOffDate(date.toISOString().split('T')[0]);
-                        }
-                      }}
-                    />
-                  )}
-                </View>
+            <Text style={styles.title}>{need.title}</Text>
+            <Text style={styles.ngoName}>{need.ngo.name}</Text>
+          </View>
 
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Notes (optional)</Text>
-                  <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Any notes for the NGO..."
-                    placeholderTextColor={COLORS.grayMd}
-                    multiline
-                    numberOfLines={3}
-                  />
-                </View>
+          {/* Progress */}
+          <View style={styles.section}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.sectionTitle}>Progress</Text>
+              <Text style={styles.progressPercent}>{progress}%</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            </View>
+            <View style={styles.progressStats}>
+              <Text style={styles.progressStat}>
+                <Text style={styles.progressStatBold}>
+                  {need.quantityFulfilled}
+                </Text>{" "}
+                {need.unit} pledged
+              </Text>
+              <Text style={styles.progressStat}>
+                <Text style={styles.progressStatBold}>{remaining}</Text>{" "}
+                {need.unit} remaining
+              </Text>
+            </View>
+          </View>
 
-                <View style={styles.formButtons}>
-                  <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handlePledge}
-                    disabled={pledgeMutation.isPending}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.submitButtonText}>
-                      {pledgeMutation.isPending
-                        ? "Submitting..."
-                        : "Submit Pledge"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => setShowPledgeForm(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
+          {/* Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Details</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Item</Text>
+              <Text style={styles.detailValue}>{need.itemName}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Quantity needed</Text>
+              <Text style={styles.detailValue}>
+                {need.quantityRequired} {need.unit}
+              </Text>
+            </View>
+            {need.deadline && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Deadline</Text>
+                <Text style={styles.detailValue}>
+                  {formatDate(need.deadline)}
+                </Text>
+              </View>
+            )}
+            {need.dropOffAddress && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Drop off</Text>
+                <Text style={styles.detailValue}>{need.dropOffAddress}</Text>
+              </View>
+            )}
+            {need.dropOffInstructions && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Instructions</Text>
+                <Text style={styles.detailValue}>
+                  {need.dropOffInstructions}
+                </Text>
+              </View>
+            )}
+            {need.description && (
+              <View
+                style={[styles.detailRow, { flexDirection: "column", gap: 4 }]}
+              >
+                <Text style={styles.detailLabel}>Description</Text>
+                <Text style={styles.detailValue}>{need.description}</Text>
               </View>
             )}
           </View>
-        )}
 
-        {need.status !== "OPEN" && (
-          <View style={styles.closedBanner}>
-            <Text style={styles.closedText}>
-              This food need is {need.status.toLowerCase()} and no longer
-              accepting pledges.
-            </Text>
-          </View>
-        )}
+          {/* Pledge form */}
+          {need.status === "OPEN" && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Make a Pledge</Text>
 
-        <View style={styles.bottomPadding} />
-      </ScrollView>
+              {!showPledgeForm ? (
+                <TouchableOpacity
+                  style={styles.pledgeButton}
+                  onPress={() => setShowPledgeForm(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.pledgeButtonText}>
+                    📦 Pledge Food Items
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.pledgeForm}>
+                  <View style={styles.field}>
+                    <Text style={styles.fieldLabel}>
+                      Quantity ({need.unit}){" "}
+                      <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={quantity}
+                      onChangeText={setQuantity}
+                      placeholder={`Max ${remaining} ${need.unit}`}
+                      placeholderTextColor={COLORS.grayMd}
+                      keyboardType="numeric"
+                    />
+                  </View>
+
+                  <View style={styles.field}>
+                    <Text style={styles.fieldLabel}>Planned drop off date</Text>
+                    <TouchableOpacity
+                      style={styles.input}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Text
+                        style={{
+                          color: dropOffDate ? COLORS.black : COLORS.grayMd,
+                          fontSize: 14,
+                        }}
+                      >
+                        {dropOffDate || "Select a date"}
+                      </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={dropOffDate ? new Date(dropOffDate) : new Date()}
+                        mode="date"
+                        minimumDate={new Date()}
+                        onChange={(event, date) => {
+                          setShowDatePicker(false);
+                          if (date) {
+                            setDropOffDate(date.toISOString().split("T")[0]);
+                          }
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.field}>
+                    <Text style={styles.fieldLabel}>Notes (optional)</Text>
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      value={notes}
+                      onChangeText={setNotes}
+                      placeholder="Any notes for the NGO..."
+                      placeholderTextColor={COLORS.grayMd}
+                      multiline
+                      numberOfLines={3}
+                    />
+                  </View>
+
+                  <View style={styles.formButtons}>
+                    <TouchableOpacity
+                      style={styles.submitButton}
+                      onPress={handlePledge}
+                      disabled={pledgeMutation.isPending}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.submitButtonText}>
+                        {pledgeMutation.isPending
+                          ? "Submitting..."
+                          : "Submit Pledge"}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => setShowPledgeForm(false)}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {need.status !== "OPEN" && (
+            <View style={styles.closedBanner}>
+              <Text style={styles.closedText}>
+                This food need is {need.status.toLowerCase()} and no longer
+                accepting pledges.
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.bottomPadding} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

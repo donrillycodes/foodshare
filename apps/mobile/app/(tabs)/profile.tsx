@@ -4,13 +4,23 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../hooks/useAuth";
-import { COLORS, getInitials } from "../../lib/utils";
+import { COLORS, FONT, SPACE, RADII, getInitials } from "../../lib/utils";
 import { useNavigationStore } from "../../store/authStore";
+
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+interface MenuItem {
+  icon: IoniconName;
+  label: string;
+  onPress: () => void;
+  danger?: boolean;
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -31,9 +41,9 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
-      emoji: "❤️",
+      icon: "heart-outline",
       label: "My Donations",
       onPress: () => {
         setActivityTab("donations");
@@ -41,33 +51,30 @@ export default function ProfileScreen() {
       },
     },
     {
-      emoji: "📦",
+      icon: "cube-outline",
       label: "My Pledges",
       onPress: () => {
         setActivityTab("pledges");
         router.push("/(tabs)/activity");
       },
     },
-
     {
-      emoji: "🔔",
+      icon: "notifications-outline",
       label: "Notifications",
       onPress: () => router.push("/notifications"),
     },
-
     {
-      emoji: "⚙️",
+      icon: "settings-outline",
       label: "Settings",
       onPress: () => router.push("/settings" as any),
     },
     {
-      emoji: "❓",
+      icon: "help-circle-outline",
       label: "Help & Support",
       onPress: () => router.push("/support" as any),
     },
-
     {
-      emoji: "📄",
+      icon: "document-text-outline",
       label: "Privacy Policy",
       onPress: () => {},
     },
@@ -93,46 +100,56 @@ export default function ProfileScreen() {
               {user?.firstName} {user?.lastName}
             </Text>
             <Text style={styles.userEmail}>{user?.email}</Text>
-            <View style={styles.donorBadge}>
-              <Text style={styles.donorBadgeText}>Donor</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>
+                {user?.role === "NGO" ? "NGO" : "Donor"}
+              </Text>
             </View>
           </View>
+          <TouchableOpacity>
+            <Ionicons name="create-outline" size={20} color={COLORS.textSub} />
+          </TouchableOpacity>
         </View>
 
-        {/* Menu items */}
+        {/* Menu */}
         <View style={styles.menu}>
-          {menuItems.map((item, index) => (
+          {menuItems.map((item, i) => (
             <TouchableOpacity
-              key={index}
+              key={i}
               style={[
                 styles.menuItem,
-                index === menuItems.length - 1 && styles.menuItemLast,
+                i < menuItems.length - 1 && styles.menuItemBorder,
               ]}
               onPress={item.onPress}
               activeOpacity={0.7}
             >
               <View style={styles.menuItemLeft}>
-                <Text style={styles.menuItemEmoji}>{item.emoji}</Text>
+                <View style={styles.menuIconWrap}>
+                  <Ionicons name={item.icon} size={18} color={COLORS.primary} />
+                </View>
                 <Text style={styles.menuItemLabel}>{item.label}</Text>
               </View>
-              <Text style={styles.menuItemArrow}>›</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={COLORS.textHint}
+              />
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Sign out */}
         <TouchableOpacity
-          style={styles.signOutButton}
+          style={styles.signOutBtn}
           onPress={handleSignOut}
           activeOpacity={0.8}
         >
+          <Ionicons name="log-out-outline" size={18} color={COLORS.error} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Version */}
         <Text style={styles.version}>GivHive v1.0.0</Text>
-
-        <View style={styles.bottomPadding} />
+        <View style={styles.bottomPad} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -144,125 +161,135 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingHorizontal: SPACE.xl,
+    paddingTop: SPACE.xl,
+    paddingBottom: SPACE.sm,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.black,
+    fontSize: FONT["2xl"],
+    fontWeight: "800",
+    color: COLORS.text,
   },
+
+  // User card
   userCard: {
-    marginHorizontal: 20,
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 20,
+    marginHorizontal: SPACE.xl,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.xl,
+    padding: SPACE.xl,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: SPACE.lg,
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
-    marginBottom: 24,
+    borderColor: COLORS.border,
+    marginBottom: SPACE["2xl"],
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.greenLt,
+    width: 60,
+    height: 60,
+    borderRadius: RADII.full,
+    backgroundColor: COLORS.primaryLight,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   avatarText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.green,
+    fontSize: FONT.xl,
+    fontWeight: "800",
+    color: COLORS.primary,
   },
   userInfo: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.black,
+    fontSize: FONT.lg,
+    fontWeight: "700",
+    color: COLORS.text,
   },
   userEmail: {
-    fontSize: 13,
-    color: COLORS.gray,
+    fontSize: FONT.sm,
+    color: COLORS.textSub,
   },
-  donorBadge: {
+  roleBadge: {
     alignSelf: "flex-start",
-    backgroundColor: COLORS.greenLt,
-    paddingHorizontal: 10,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: SPACE.md,
     paddingVertical: 3,
-    borderRadius: 20,
-    marginTop: 4,
+    borderRadius: RADII.full,
+    marginTop: 2,
   },
-  donorBadgeText: {
-    fontSize: 12,
-    color: COLORS.green,
-    fontWeight: "600",
+  roleBadgeText: {
+    fontSize: FONT.xs,
+    color: COLORS.primary,
+    fontWeight: "700",
   },
+
+  // Menu
   menu: {
-    marginHorizontal: 20,
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
+    marginHorizontal: SPACE.xl,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.xl,
     borderWidth: 1,
-    borderColor: COLORS.grayMd,
+    borderColor: COLORS.border,
     overflow: "hidden",
-    marginBottom: 16,
+    marginBottom: SPACE.lg,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.grayLt,
+    paddingHorizontal: SPACE.lg,
+    paddingVertical: SPACE.lg,
   },
-  menuItemLast: {
-    borderBottomWidth: 0,
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: SPACE.md,
   },
-  menuItemEmoji: {
-    fontSize: 20,
+  menuIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: RADII.sm,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
   menuItemLabel: {
-    fontSize: 15,
-    color: COLORS.black,
+    fontSize: FONT.base,
+    color: COLORS.text,
     fontWeight: "500",
   },
-  menuItemArrow: {
-    fontSize: 20,
-    color: COLORS.grayMd,
-  },
-  signOutButton: {
-    marginHorizontal: 20,
-    backgroundColor: "#FEF2F2",
-    borderRadius: 14,
-    paddingVertical: 16,
+
+  // Sign out
+  signOutBtn: {
+    marginHorizontal: SPACE.xl,
+    backgroundColor: COLORS.errorLight,
+    borderRadius: RADII.lg,
+    paddingVertical: SPACE.lg,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: COLORS.errorBorder,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: SPACE.sm,
   },
   signOutText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#DC2626",
+    fontSize: FONT.base,
+    fontWeight: "700",
+    color: COLORS.error,
   },
   version: {
     textAlign: "center",
-    fontSize: 12,
-    color: COLORS.grayMd,
-    marginTop: 16,
+    fontSize: FONT.xs,
+    color: COLORS.textHint,
+    marginTop: SPACE.lg,
   },
-  bottomPadding: {
-    height: 20,
+  bottomPad: {
+    height: SPACE.xl,
   },
 });
