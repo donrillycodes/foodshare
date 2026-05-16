@@ -32,14 +32,14 @@ export default function StripeConnectPage() {
   } = useQuery({
     queryKey: ["stripe-connect-status"],
     queryFn: async () => {
-      const res = await api.get("/stripe-connect/status");
+      const res = await api.get("/api/stripe-connect/status");
       return res.data.data as ConnectStatus;
     },
   });
 
   const onboardMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post("/stripe-connect/onboard");
+      const res = await api.post("/api/stripe-connect/onboard");
       return res.data.data as { url: string };
     },
     onSuccess: (data) => {
@@ -49,7 +49,7 @@ export default function StripeConnectPage() {
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post("/stripe-connect/refresh");
+      const res = await api.post("/api/stripe-connect/refresh");
       return res.data.data as { url: string };
     },
     onSuccess: (data) => {
@@ -59,7 +59,7 @@ export default function StripeConnectPage() {
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
-      await api.delete("/stripe-connect/disconnect");
+      await api.delete("/api/stripe-connect/disconnect");
     },
     onSuccess: () => {
       refetch();
