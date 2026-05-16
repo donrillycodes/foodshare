@@ -97,7 +97,9 @@ import foodPledgeRoutes from './routes/foodPledge.routes';
 import updateRoutes from './routes/update.routes';
 import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
+import stripeConnectRoutes from './routes/stripeConnect.routes';
 
+app.use('/api/stripe-connect', stripeConnectRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ngos', ngoRoutes);
