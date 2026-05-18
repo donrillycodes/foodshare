@@ -16,10 +16,18 @@ import { cn } from "@/lib/utils";
 // focus rings or label spacing is a one-line change instead of a
 // fifty-file find-and-replace.
 
+// KEY CHANGES:
+// - border-2 → 2px border, clearly visible on any screen
+// - bg-gray-50 → standard Tailwind light grey, inputs stand out from white card
+// - border-gray-200 → standard Tailwind, no custom token ambiguity
+// - placeholder:text-gray-400 → standard, always visible
+// - py-3 → taller inputs, easier to tap on mobile
+// - rounded-xl → slightly more rounded, modern feel
+
 export const inputClass =
-  "w-full px-3 py-3 text-sm border border-border-strong rounded-lg bg-white " +
-  "focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green focus:bg-white " +
-  "placeholder:text-ink-subtle transition-all";
+  "w-full px-3.5 py-3 text-sm border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-900 " +
+  "focus:outline-none focus:border-brand-green focus:bg-white focus:ring-4 focus:ring-brand-green/10 " +
+  "placeholder:text-gray-400 transition-all duration-150";
 
 interface FieldShellProps {
   label?: string;
@@ -41,9 +49,9 @@ export function FieldShell({
   htmlFor,
 }: FieldShellProps) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       {label && (
-        <label htmlFor={htmlFor} className="text-xs font-medium text-ink-soft">
+        <label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
@@ -52,7 +60,7 @@ export function FieldShell({
       {error ? (
         <p className="text-xs text-red-600">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-ink-subtle">{hint}</p>
+        <p className="text-xs text-gray-400">{hint}</p>
       ) : null}
     </div>
   );
@@ -97,7 +105,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       >
         <div className="relative">
           {leftIcon && (
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               {leftIcon}
             </span>
           )}
@@ -107,9 +115,10 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             required={required}
             className={cn(
               inputClass,
-              leftIcon && "pl-9",
-              rightSlot && "pr-10",
-              error && "border-red-300 focus:border-red-500 focus:ring-red-200",
+              leftIcon && "pl-10",
+              rightSlot && "pr-11",
+              error &&
+                "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-100",
               className,
             )}
             {...props}
@@ -127,7 +136,6 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 TextField.displayName = "TextField";
 
 // ---------- PasswordField ----------
-// Includes the eye icon toggle Emmanuel asked for.
 
 interface PasswordFieldProps extends Omit<TextFieldProps, "type"> {}
 
@@ -142,7 +150,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            className="p-1.5 rounded-md text-ink-subtle hover:text-ink-soft hover:bg-surface-muted transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label={visible ? "Hide password" : "Show password"}
             tabIndex={-1}
           >
@@ -203,7 +211,8 @@ export const TextareaField = forwardRef<
           className={cn(
             inputClass,
             "resize-none",
-            error && "border-red-300 focus:border-red-500 focus:ring-red-200",
+            error &&
+              "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-100",
             className,
           )}
           rows={props.rows ?? 3}
@@ -262,7 +271,8 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
           className={cn(
             inputClass,
             "appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23687177%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_0.75rem_center] pr-9",
-            error && "border-red-300 focus:border-red-500 focus:ring-red-200",
+            error &&
+              "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-100",
             className,
           )}
           {...props}
@@ -299,15 +309,15 @@ export const CheckboxField = forwardRef<HTMLInputElement, CheckboxFieldProps>(
           id={fieldId}
           type="checkbox"
           className={cn(
-            "mt-0.5 w-4 h-4 rounded border-border-default text-brand-green focus:ring-2 focus:ring-brand-green/30",
+            "mt-0.5 w-4 h-4 rounded border-2 border-gray-300 text-brand-green focus:ring-2 focus:ring-brand-green/30",
             className,
           )}
           {...props}
         />
         <span className="flex flex-col">
-          <span className="text-sm text-ink-soft">{label}</span>
+          <span className="text-sm text-gray-700">{label}</span>
           {description && (
-            <span className="text-xs text-ink-subtle">{description}</span>
+            <span className="text-xs text-gray-400">{description}</span>
           )}
         </span>
       </label>

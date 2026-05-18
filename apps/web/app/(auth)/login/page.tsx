@@ -15,12 +15,6 @@ import {
 } from "@/components/auth/AuthShell";
 import { Mail } from "lucide-react";
 
-// Login — left column is the dark brand panel, right column is the form.
-// We keep the Google button visible so the placement is correct for when
-// the provider gets wired up — but until then it shows a "Coming soon"
-// pill and the click sets an error message. The brand panel gives the
-// page weight on wide screens and collapses to just a small logo on mobile.
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -71,22 +65,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Dark brand panel — visible on desktop only */}
       <BrandPanel />
 
-      {/* Form panel */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-page">
+      {/* Form panel
+          Mobile:  top-aligned with padding-top so logo + form sit near top,
+                   no dead space above or below.
+          Desktop: centred vertically (the brand panel fills the left half). */}
+      <div className="flex-1 flex flex-col items-center justify-start md:justify-center px-5 pt-12 pb-10 md:pt-0 md:pb-0 bg-gray-50">
         <div className="w-full max-w-sm">
+          {/* Small logo — only shown on mobile when BrandPanel is hidden */}
           <MobileLogo />
 
-          <div className="mb-7">
-            <h1 className="text-xl font-semibold text-ink">Welcome back</h1>
-            <p className="text-sm text-ink-soft mt-1">
+          {/* Heading */}
+          <div className="mb-8 mt-2">
+            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+            <p className="text-sm text-gray-500 mt-1">
               Sign in to your NGO or Admin dashboard
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-border-default p-7 shadow-[0_4px_16px_rgba(13,26,18,0.08)]">
+          {/* Card — white surface with real shadow so it lifts off the page */}
+          <div
+            className="bg-white rounded-2xl p-6 md:p-8"
+            style={{
+              boxShadow:
+                "0 4px 24px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)",
+            }}
+          >
             <GoogleSoonButton
               onClick={() =>
                 setError(
@@ -101,7 +108,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               {error && (
-                <div className="bg-red-50 border border-red-100 text-red-700 text-xs rounded-lg px-3.5 py-3">
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
                   {error}
                 </div>
               )}
@@ -126,7 +133,8 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
 
-              <div className="pt-2">
+              {/* Extra breathing room between last field and button */}
+              <div className="pt-1">
                 <Button type="submit" disabled={loading} fullWidth size="lg">
                   {loading ? "Signing in..." : "Sign in"}
                 </Button>
@@ -134,11 +142,11 @@ export default function LoginPage() {
             </form>
           </div>
 
-          <p className="text-center text-xs text-ink-soft mt-5">
+          <p className="text-center text-sm text-gray-500 mt-6">
             New to GivHive?{" "}
             <Link
               href="/register"
-              className="text-brand-green hover:underline font-medium"
+              className="text-brand-green hover:underline font-semibold"
             >
               Create an account
             </Link>
