@@ -99,7 +99,7 @@ export default function LoginPage() {
               <OrDivider />
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-5">
               {error && (
                 <div className="bg-red-50 border border-red-100 text-red-700 text-xs rounded-lg px-3.5 py-3">
                   {error}
@@ -126,9 +126,11 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
 
-              <Button type="submit" disabled={loading} fullWidth size="lg">
-                {loading ? "Signing in..." : "Sign in"}
-              </Button>
+              <div className="pt-2">
+                <Button type="submit" disabled={loading} fullWidth size="lg">
+                  {loading ? "Signing in..." : "Sign in"}
+                </Button>
+              </div>
             </form>
           </div>
 
