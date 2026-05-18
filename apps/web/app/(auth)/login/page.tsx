@@ -86,7 +86,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-border-subtle p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="bg-white rounded-2xl border border-border-default p-7 shadow-[0_4px_16px_rgba(13,26,18,0.08)]">
             <GoogleSoonButton
               onClick={() =>
                 setError(

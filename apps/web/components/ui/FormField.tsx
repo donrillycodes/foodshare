@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 // fifty-file find-and-replace.
 
 export const inputClass =
-  "w-full px-3 py-2.5 text-sm border border-border-default rounded-lg bg-surface-muted " +
+  "w-full px-3 py-3 text-sm border border-border-strong rounded-lg bg-white " +
   "focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green focus:bg-white " +
   "placeholder:text-ink-subtle transition-all";
 
@@ -43,10 +43,7 @@ export function FieldShell({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
-        <label
-          htmlFor={htmlFor}
-          className="text-xs font-medium text-ink-soft"
-        >
+        <label htmlFor={htmlFor} className="text-xs font-medium text-ink-soft">
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
@@ -165,15 +162,17 @@ PasswordField.displayName = "PasswordField";
 
 // ---------- TextareaField ----------
 
-interface TextareaFieldProps
-  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextareaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   hint?: string;
   error?: string;
   containerClassName?: string;
 }
 
-export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>(
+export const TextareaField = forwardRef<
+  HTMLTextAreaElement,
+  TextareaFieldProps
+>(
   (
     {
       label,
