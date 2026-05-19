@@ -75,6 +75,57 @@ export class DonationController {
     }
   }
 
+  // POST /api/donations/checkout
+  // Creates a Stripe Checkout Session and returns the hosted payment URL
+  async createCheckoutSession(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        responses.unauthorized(res);
+        return;
+      }
+      const { ngoId, amount, currency, message, isAnonymous } = req.body;
+      if (!ngoId) {
+        responses.badRequest(res, 'NGO ID is required');
+        return;
+      }
+      if (!amount || typeof amount !== 'number') {
+        responses.badRequest(res, 'A valid donation amount is required');
+        return;
+      }
+      const result = await donationService.createCheckoutSession(
+        {
+          ngoId,
+          amount,
+          currency: currency ?? 'CAD',
+          message,
+          isAnonymous: isAnonymous ?? false,
+        },
+        req.user.id
+      );
+      await writeAuditLog(req, {
+        action: AuditAction.DONATION_INITIATED,
+        entityType: AuditEntityType.DONATION,
+        entityId: result.donation.id,
+        newState: {
+          status: result.donation.status,
+          amount: result.donation.amount,
+          currency: result.donation.currency,
+        },
+        notes: 'Donation Checkout Session created',
+      });
+      responses.created(res, 'Checkout session created successfully', {
+        donation: result.donation,
+        checkoutUrl: result.checkoutUrl,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // POST /api/donations/webhook
   // Receives Stripe webhook events
   // Must use raw body — configured in app.ts

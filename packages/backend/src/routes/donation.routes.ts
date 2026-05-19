@@ -29,6 +29,16 @@ router.post(
   donationController.createPaymentIntent.bind(donationController)
 );
 
+// Create a Stripe Checkout Session and initiate a donation
+// POST /api/donations/checkout
+router.post(
+  '/checkout',
+  authenticate,
+  requireRole(Role.DONOR, Role.SUPER_ADMIN),
+  donationLimiter,
+  donationController.createCheckoutSession.bind(donationController)
+);
+
 // Get a single donation by ID
 // GET /api/donations/:id
 router.get(

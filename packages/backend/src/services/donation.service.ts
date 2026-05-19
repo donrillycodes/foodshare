@@ -9,6 +9,7 @@ import {
 import { DonationStatus, PaymentProvider } from '@prisma/client';
 import { CreateDonationInput } from '../types';
 import emailService from './email.service';
+import { env } from '../config/env';
 
 export class DonationService {
   // Create a Stripe PaymentIntent and a PENDING donation record
@@ -117,6 +118,128 @@ export class DonationService {
     };
   }
 
+  // Create a Stripe Checkout Session for a donation
+  async createCheckoutSession(input: CreateDonationInput, donorId: string) {
+    // Verify the NGO exists and is approved
+    const ngo = await db.nGO.findUnique({
+      where: { id: input.ngoId },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        isActive: true,
+        stripeAccountId: true,
+      },
+    });
+    if (!ngo) {
+      throw new AppError('NGO not found', 404);
+    }
+    if (ngo.status !== 'APPROVED' || !ngo.isActive) {
+      throw new AppError('This NGO is not currently accepting donations', 400);
+    }
+
+    // Validate donation amount
+    if (input.amount < 1) {
+      throw new AppError('Minimum donation amount is $1.00', 400);
+    }
+    if (input.amount > 10000) {
+      throw new AppError(
+        'Maximum donation amount per transaction is $10,000.00',
+        400
+      );
+    }
+
+    // Get donor details
+    const donor = await db.user.findUnique({
+      where: { id: donorId },
+      select: { id: true, email: true, firstName: true, lastName: true },
+    });
+    if (!donor) {
+      throw new AppError('Donor not found', 404);
+    }
+
+    const amountInCents = Math.round(input.amount * 100);
+    const currency = (input.currency ?? 'cad').toLowerCase();
+
+    // Build payment intent data — route to the NGO's connected
+    // Stripe account if they have one, otherwise the GivHive
+    // platform account collects the donation.
+    const paymentIntentData: any = {
+      description: `Donation to ${ngo.name} via GivHive`,
+      metadata: {
+        donorId: donor.id,
+        donorEmail: donor.email,
+        ngoId: ngo.id,
+        ngoName: ngo.name,
+        isAnonymous: String(input.isAnonymous ?? false),
+      },
+    };
+    if (ngo.stripeAccountId) {
+      paymentIntentData.transfer_data = {
+        destination: ngo.stripeAccountId,
+      };
+    }
+
+    // Create the Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: donor.email,
+      line_items: [
+        {
+          price_data: {
+            currency,
+            product_data: {
+              name: `Donation to ${ngo.name}`,
+              description:
+                'Thank you for supporting this organisation through GivHive.',
+            },
+            unit_amount: amountInCents,
+          },
+          quantity: 1,
+        },
+      ],
+      payment_intent_data: paymentIntentData,
+      success_url: `${env.clientUrl}/donation-complete?status=success`,
+      cancel_url: `${env.clientUrl}/donation-complete?status=cancelled`,
+      metadata: {
+        donorId: donor.id,
+        ngoId: ngo.id,
+      },
+    });
+
+    // Create a PENDING donation record — keyed by the Checkout Session id
+    const donation = await db.donation.create({
+      data: {
+        donorId,
+        ngoId: input.ngoId,
+        amount: input.amount,
+        currency: currency.toUpperCase(),
+        paymentProvider: PaymentProvider.STRIPE,
+        providerPaymentId: session.id,
+        status: DonationStatus.PENDING,
+        message: input.message,
+        isAnonymous: input.isAnonymous ?? false,
+      },
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        status: true,
+        isAnonymous: true,
+        message: true,
+        createdAt: true,
+      },
+    });
+
+    logger.info(
+      `Checkout Session created: ${session.id} for donor: ${donorId} to NGO: ${input.ngoId}`
+    );
+
+    return {
+      donation,
+      checkoutUrl: session.url,
+    };
+  }
   // Handle Stripe webhook events
   // Called by Stripe when payment status changes
   async handleWebhookEvent(rawBody: Buffer, signature: string) {
