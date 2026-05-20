@@ -174,10 +174,28 @@ export class DonationService {
         isAnonymous: String(input.isAnonymous ?? false),
       },
     };
+    // Only route to the NGO's connected account if it's fully onboarded
+    // and Stripe has actually activated the transfers capability.
+    // Otherwise the donation falls back to the GivHive platform account.
     if (ngo.stripeAccountId) {
-      paymentIntentData.transfer_data = {
-        destination: ngo.stripeAccountId,
-      };
+      try {
+        const account = await stripe.accounts.retrieve(ngo.stripeAccountId);
+        const transfersActive = account.capabilities?.transfers === 'active';
+        if (account.charges_enabled && transfersActive) {
+          paymentIntentData.transfer_data = {
+            destination: ngo.stripeAccountId,
+          };
+        } else {
+          logger.warn(
+            `NGO ${ngo.id} has Stripe account ${ngo.stripeAccountId} but is not ready for transfers — falling back to platform account`
+          );
+        }
+      } catch (err) {
+        logger.error(
+          `Failed to retrieve Stripe account ${ngo.stripeAccountId} — falling back to platform`,
+          { err }
+        );
+      }
     }
 
     // Create the Stripe Checkout Session

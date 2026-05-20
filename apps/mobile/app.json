@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "FoodShare",
-    "slug": "foodshare",
+    "name": "GivHive",
+    "slug": "givehive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "foodshare",
+    "scheme": "givehive",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "ca.foodshare.app"
+      "bundleIdentifier": "ca.givehive.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A7A4A"
       },
-      "package": "ca.foodshare.app"
+      "package": "ca.givehive.app"
     },
     "web": {
       "bundler": "metro"
@@ -29,7 +29,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "FoodShare needs access to your photos to upload images."
+          "photosPermission": "GivHive needs access to your photos to upload images."
         }
       ],
       "@react-native-community/datetimepicker"

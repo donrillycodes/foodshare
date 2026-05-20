@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ngoApi, donationApi } from "../../lib/api";
 import { COLORS } from "../../lib/utils";
 import type { NGO } from "../../types";
+import * as WebBrowser from "expo-web-browser";
 
 const PRESET_AMOUNTS = [5, 10, 25, 50, 100];
 
@@ -37,19 +38,29 @@ export default function DonateScreen() {
   });
 
   const donateMutation = useMutation({
-    mutationFn: () =>
-      donationApi.create({
+    mutationFn: async () => {
+      const res = await donationApi.checkout({
         ngoId,
         amount: parseFloat(customAmount || amount),
         currency: "CAD",
         message: message || undefined,
         isAnonymous,
-      }),
-    onSuccess: () => {
+      });
+      return res.data.data as {
+        donation: { id: string };
+        checkoutUrl: string;
+      };
+    },
+    onSuccess: async (data) => {
+      // Open Stripe's hosted checkout page in an in-app browser
+      await WebBrowser.openBrowserAsync(data.checkoutUrl);
+
+      // The browser has closed — refresh the donation history
       queryClient.invalidateQueries({ queryKey: ["my-donations"] });
+
       Alert.alert(
-        "Thank you! ❤️",
-        `Your donation to ${ngo?.name} has been processed successfully.`,
+        "Donation submitted",
+        `Thank you for supporting ${ngo?.name}. Your donation will appear in your activity once payment is confirmed.`,
         [
           {
             text: "Done",
@@ -59,9 +70,10 @@ export default function DonateScreen() {
       );
     },
     onError: (error: any) => {
-      const message =
-        error?.response?.data?.message ?? "Donation failed. Please try again.";
-      Alert.alert("Payment Failed", message);
+      const msg =
+        error?.response?.data?.message ??
+        "Could not start the donation. Please try again.";
+      Alert.alert("Payment Failed", msg);
     },
   });
 

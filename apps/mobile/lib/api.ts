@@ -51,6 +51,13 @@ export const foodNeedApi = {
 // ── Donations ──────────────────────────────────────────────────────────────────
 export const donationApi = {
   create: (data: any) => apiClient.post("/api/donations", data),
+  checkout: (data: {
+    ngoId: string;
+    amount: number;
+    currency: string;
+    message?: string;
+    isAnonymous?: boolean;
+  }) => apiClient.post("/api/donations/checkout", data),
   getMyDonations: (params?: any) =>
     apiClient.get("/api/users/donations", { params }),
 };
